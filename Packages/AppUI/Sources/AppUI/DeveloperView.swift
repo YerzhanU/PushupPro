@@ -9,17 +9,21 @@
 import SwiftUI
 
 public struct DeveloperView: View {
+  @State private var useSynthetic = false
   public init() {}
   public var body: some View {
-    Form {
-      Section("Feature flags") {
-        Toggle("Use Synthetic Depth", isOn: .constant(true))
-        Toggle("Enable Dev Overlay", isOn: .constant(true))
+    NavigationStack {
+      Form {
+        Section("Feature flags") {
+          Toggle("Use Synthetic Depth", isOn: $useSynthetic)
+        }
+        Section {
+          NavigationLink("Depth Debug") {
+            DistanceDebugView(useSynthetic: useSynthetic)
+          }
+        }
       }
-      Section("Build") {
-        Text("Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—")")
-      }
+      .navigationTitle("Developer")
     }
-    .navigationTitle("Developer")
   }
 }

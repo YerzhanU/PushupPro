@@ -11,6 +11,7 @@
 		1305A18D2E5298DC0029E6A9 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A18C2E5298DC0029E6A9 /* FirebaseFirestore */; };
 		1305A1A92E52A1190029E6A9 /* AppUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1A82E52A1190029E6A9 /* AppUI */; };
 		1305A1AB2E52A5060029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */; };
+		1305A1B02E52AAB70029E6A9 /* Sensing in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1AF2E52AAB70029E6A9 /* Sensing */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +63,7 @@
 			files = (
 				1305A1A92E52A1190029E6A9 /* AppUI in Frameworks */,
 				1305A18B2E5298DC0029E6A9 /* FirebaseAuth in Frameworks */,
+				1305A1B02E52AAB70029E6A9 /* Sensing in Frameworks */,
 				1305A18D2E5298DC0029E6A9 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -128,6 +130,7 @@
 				1305A18A2E5298DC0029E6A9 /* FirebaseAuth */,
 				1305A18C2E5298DC0029E6A9 /* FirebaseFirestore */,
 				1305A1A82E52A1190029E6A9 /* AppUI */,
+				1305A1AF2E52AAB70029E6A9 /* Sensing */,
 			);
 			productName = PushupProApp;
 			productReference = 1305A15F2E5297020029E6A9 /* PushupProApp.app */;
@@ -214,6 +217,7 @@
 			packageReferences = (
 				1305A1892E5298DC0029E6A9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				1305A1A72E52A1180029E6A9 /* XCLocalSwiftPackageReference "../Packages/AppUI" */,
+				1305A1AE2E52AAB70029E6A9 /* XCLocalSwiftPackageReference "../Packages/Sensing" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1305A1602E5297020029E6A9 /* Products */;
@@ -607,6 +611,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../Packages/AppUI;
 		};
+		1305A1AE2E52AAB70029E6A9 /* XCLocalSwiftPackageReference "../Packages/Sensing" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Packages/Sensing;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -634,6 +642,10 @@
 		1305A1A82E52A1190029E6A9 /* AppUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AppUI;
+		};
+		1305A1AF2E52AAB70029E6A9 /* Sensing */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Sensing;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
