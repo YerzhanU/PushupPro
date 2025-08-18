@@ -2,9 +2,40 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:Packages/DevTools">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/Leaderboard">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/Challenges">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/Social">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/Sessions">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/RepEngine">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/Sensing">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/Data">
+   </FileRef>
+   <FileRef
       location = "group:Packages/AppUI">
    </FileRef>
    <FileRef
       location = "group:PushupProApp/PushupProApp.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:.swiftlint.yml">
+   </FileRef>
+   <FileSystemSynchronizedGroup
+      location = "group:.github"
+      name = ".github">
+   </FileSystemSynchronizedGroup>
 </Workspace>

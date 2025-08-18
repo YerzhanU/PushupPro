@@ -1,0 +1,25 @@
+//
+//  Untitled.swift
+//  
+//
+//  Created by Yerzhan Utkelbayev on 18/08/2025.
+//
+
+disabled_rules:
+  - line_length
+  - trailing_whitespace
+
+opt_in_rules:
+  - missing_docs   # <— fails when public decls lack /// docs
+  - closure_end_indentation
+  - discouraged_optional_boolean
+  - redundant_type_annotation
+
+included:
+  - PushupProApp
+  - Packages
+
+missing_docs:
+  warning: true
+  excludes_extensions: false
+  only_private: false

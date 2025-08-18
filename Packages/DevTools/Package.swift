@@ -4,22 +4,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "AppUI",
-    platforms: [.iOS(.v17)],
+    name: "DevTools",
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "AppUI",
-            targets: ["AppUI"]),
+            name: "DevTools",
+            targets: ["DevTools"]),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "AppUI"),
+            name: "DevTools"),
         .testTarget(
-            name: "AppUITests",
-            dependencies: ["AppUI"]
+            name: "DevToolsTests",
+            dependencies: ["DevTools"]
         ),
     ]
 )

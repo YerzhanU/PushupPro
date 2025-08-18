@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		1305A18B2E5298DC0029E6A9 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A18A2E5298DC0029E6A9 /* FirebaseAuth */; };
 		1305A18D2E5298DC0029E6A9 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A18C2E5298DC0029E6A9 /* FirebaseFirestore */; };
+		1305A1A92E52A1190029E6A9 /* AppUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1A82E52A1190029E6A9 /* AppUI */; };
+		1305A1AB2E52A5060029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +34,7 @@
 		1305A15F2E5297020029E6A9 /* PushupProApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PushupProApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1305A16C2E5297040029E6A9 /* PushupProAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PushupProAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1305A1762E5297040029E6A9 /* PushupProAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PushupProAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -57,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1305A1A92E52A1190029E6A9 /* AppUI in Frameworks */,
 				1305A18B2E5298DC0029E6A9 /* FirebaseAuth in Frameworks */,
 				1305A18D2E5298DC0029E6A9 /* FirebaseFirestore in Frameworks */,
 			);
@@ -86,6 +90,7 @@
 				1305A16F2E5297040029E6A9 /* PushupProAppTests */,
 				1305A1792E5297040029E6A9 /* PushupProAppUITests */,
 				1305A1602E5297020029E6A9 /* Products */,
+				1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -109,6 +114,7 @@
 				1305A15B2E5297020029E6A9 /* Sources */,
 				1305A15C2E5297020029E6A9 /* Frameworks */,
 				1305A15D2E5297020029E6A9 /* Resources */,
+				1305A19A2E529D060029E6A9 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -121,6 +127,7 @@
 			packageProductDependencies = (
 				1305A18A2E5298DC0029E6A9 /* FirebaseAuth */,
 				1305A18C2E5298DC0029E6A9 /* FirebaseFirestore */,
+				1305A1A82E52A1190029E6A9 /* AppUI */,
 			);
 			productName = PushupProApp;
 			productReference = 1305A15F2E5297020029E6A9 /* PushupProApp.app */;
@@ -206,6 +213,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1305A1892E5298DC0029E6A9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				1305A1A72E52A1180029E6A9 /* XCLocalSwiftPackageReference "../Packages/AppUI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1305A1602E5297020029E6A9 /* Products */;
@@ -224,6 +232,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1305A1AB2E52A5060029E6A9 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,6 +251,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1305A19A2E529D060029E6A9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Fail fast on errors\nset -e\n\n# Repo root (works whether building from Xcode or CI)\nREPO_ROOT=\"${PROJECT_DIR}\"\n\n# Ensure Homebrew bin is on PATH (for some CI/mac setups)\nexport PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"\n\nif command -v swiftformat >/dev/null 2>&1; then\n  echo \"Running SwiftFormat (lint mode)…\"\n  swiftformat \"$REPO_ROOT\" --lint\nelse\n  echo \"warning: SwiftFormat not installed (brew install swiftformat)\"\nfi\n\nif command -v swiftlint >/dev/null 2>&1; then\n  echo \"Running SwiftLint…\"\n  # If you have a .swiftlint.yml at repo root, point to it explicitly:\n  swiftlint --strict --config \"$REPO_ROOT/.swiftlint.yml\"\nelse\n  echo \"warning: SwiftLint not installed (brew install swiftlint)\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1305A15B2E5297020029E6A9 /* Sources */ = {
@@ -573,6 +602,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		1305A1A72E52A1180029E6A9 /* XCLocalSwiftPackageReference "../Packages/AppUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Packages/AppUI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		1305A1892E5298DC0029E6A9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -594,6 +630,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1305A1892E5298DC0029E6A9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		1305A1A82E52A1190029E6A9 /* AppUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AppUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import FirebaseCore
 
 @main
 struct PushupProAppApp: App {
+    init() {
+      FirebaseApp.configure()
+    }
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+      WindowGroup {
+        RootView()
+      }
     }
 }
