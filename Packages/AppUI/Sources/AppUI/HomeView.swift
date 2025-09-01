@@ -9,20 +9,29 @@
 import SwiftUI
 
 public struct HomeView: View {
+  @State private var showLive = false
+
   public init() {}
+
   public var body: some View {
     NavigationStack {
       VStack(spacing: 16) {
         Text("Push-ups")
           .font(.largeTitle).bold()
-        Button("Start Session") {}
+
+        Button("Start Session") { showLive = true }
           .buttonStyle(.borderedProminent)
+
         HeightChip()
         ProTip()
         Spacer()
       }
       .padding()
       .navigationTitle("Home")
+      // Navigate to the live session when the button toggles showLive
+      .navigationDestination(isPresented: $showLive) {
+        LiveSessionView()   // ← make sure LiveSessionView is public in AppUI
+      }
     }
   }
 }

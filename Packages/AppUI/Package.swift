@@ -6,12 +6,13 @@ let package = Package(
   platforms: [.iOS(.v17)],
   products: [.library(name: "AppUI", targets: ["AppUI"])],
   dependencies: [
-    .package(path: "../Sensing")
+    .package(path: "../Sensing"),
+    .package(path: "../RepEngine")
   ],
   targets: [
     .target(
       name: "AppUI",
-      dependencies: ["Sensing"]
+      dependencies: ["Sensing", "RepEngine"]
     ),
     .testTarget(name: "AppUITests", dependencies: ["AppUI"])
   ]
