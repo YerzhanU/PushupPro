@@ -6,6 +6,11 @@
 //
 
 
+//
+//  Models.swift
+//  Sessions
+//
+
 import Foundation
 
 public struct Sample: Codable, Sendable {
@@ -30,7 +35,7 @@ public struct RepEventDTO: Codable, Sendable {
   public init(t: Double, kind: RepEventKind) { self.t = t; self.kind = kind }
 }
 
-public struct Session: Codable, Sendable, Identifiable {
+public struct Session: Codable, Sendable, Identifiable, Hashable {
   public let id: UUID
   public let startedAt: Date
   public let endedAt: Date
@@ -70,6 +75,10 @@ public struct Session: Codable, Sendable, Identifiable {
     self.samples = samples
     self.events = events
   }
+
+  // ✅ Custom Equatable/Hashable: compare & hash by id only
+  public static func == (lhs: Session, rhs: Session) -> Bool { lhs.id == rhs.id }
+  public func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 public struct SessionMeta: Codable, Sendable, Identifiable {

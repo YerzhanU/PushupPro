@@ -5,6 +5,11 @@
 //  Created by Yerzhan Utkelbayev on 06/09/2025.
 //
 
+//
+//  SessionRecorder.swift
+//  Sessions
+//
+
 import Foundation
 
 public final class SessionRecorder: @unchecked Sendable {
@@ -18,7 +23,7 @@ public final class SessionRecorder: @unchecked Sendable {
 
   public init() {}
 
-  public func start(heightDeltaCM: Double, startDate: Date = .now) {
+  public func start(heightDeltaCM: Double, startDate: Date = Date()) {
     self.startedAt = startDate
     self.startT = nil           // will initialize on first record()
     self.heightDeltaCM = heightDeltaCM
@@ -48,7 +53,7 @@ public final class SessionRecorder: @unchecked Sendable {
     events.append(.init(t: rel, kind: kind))
   }
 
-  public func finish(endDate: Date = .now) -> Session {
+  public func finish(endDate: Date = Date()) -> Session {
     let start = startedAt ?? endDate
     let dur = max(0, endDate.timeIntervalSince(start))
     let total = events.filter { $0.kind == .rep }.count

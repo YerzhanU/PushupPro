@@ -21,6 +21,16 @@ public struct HomeView: View {
 
         Button("Start Session") { showLive = true }
           .buttonStyle(.borderedProminent)
+          .frame(maxWidth: .infinity)
+
+        // Quick link to saved sessions (M3)
+        NavigationLink {
+          HistoryView()
+        } label: {
+          Label("History", systemImage: "clock.arrow.circlepath")
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
 
         HeightChip()
         ProTip()
@@ -28,15 +38,14 @@ public struct HomeView: View {
       }
       .padding()
       .navigationTitle("Home")
-      // Navigate to the live session when the button toggles showLive
       .navigationDestination(isPresented: $showLive) {
-        LiveSessionView()   // ← make sure LiveSessionView is public in AppUI
+        LiveSessionView() // ensure LiveSessionView is public in AppUI
       }
     }
   }
 }
 
-/// Quick access height control + auto indicator.
+/// Quick access height control + auto indicator (copy unchanged for now)
 public struct HeightChip: View {
   public init() {}
   public var body: some View {

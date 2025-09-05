@@ -5,6 +5,11 @@
 //  Created by Yerzhan Utkelbayev on 06/09/2025.
 //
 
+//
+//  SessionStore.swift
+//  Sessions
+//
+
 import Foundation
 
 public final class SessionStore {
@@ -36,7 +41,6 @@ public final class SessionStore {
     let meta = SessionMeta(id: session.id, startedAt: session.startedAt, endedAt: session.endedAt, totalReps: session.totalReps, heightDeltaCM: session.heightDeltaCM)
     metas.removeAll { $0.id == meta.id }
     metas.append(meta)
-    // Keep most recent first
     metas.sort { $0.startedAt > $1.startedAt }
     let mdata = try JSONEncoder.iso8601().encode(metas)
     try mdata.write(to: indexURL, options: .atomic)
@@ -58,7 +62,6 @@ public final class SessionStore {
 
   // MARK: Export
 
-  /// Writes a CSV for the given session and returns its file URL.
   public func exportCSV(for session: Session, filename: String = "export-latest.csv") throws -> URL {
     var csv = "t_sec,cm,threshold,armed\n"
     for s in session.samples {
@@ -74,7 +77,7 @@ private extension JSONEncoder {
   static func iso8601() -> JSONEncoder {
     let e = JSONEncoder()
     e.dateEncodingStrategy = .iso8601
-    e.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes]
+    e.outputFormatting = [.prettyPrinted]   // removed .withoutEscapingSlashes
     return e
   }
 }

@@ -6,30 +6,38 @@
 //
 
 
+//
+//  LiveSessionView.swift
+//  AppUI
+//
+
 import SwiftUI
 import Sensing
 import RepEngine
+import Sessions
 
 public struct LiveSessionView: View {
   // MARK: UI state
   @State private var reps = 0
-  @State private var telemetry = RepTelemetry()     // ← minimal telemetry struct
+  @State private var telemetry = RepTelemetry()
   @State private var error: String?
 
-  // Height control (manualCM = required descent from TOP, in cm)
-  // You can keep/use the "Auto" toggle in the chip UI, but this detector ignores it.
-  @State private var useAuto = false
-  @State private var manualCM: Double = 4.0         // start with 4 cm gap as requested
+  // Height control = required descent from rolling TOP (cm)
+  @State private var manualCM: Double = 3.0     // good default for 0.9↔︎4.0cm swing
 
   // Simulator quick toggle
   @State private var useSynthetic = false
 
-  // Config tracking & session restarts
-  @State private var currentConfig = RepConfig(heightDeltaCM: 4.0)
+  // Config / session
+  @State private var currentConfig = RepConfig(heightDeltaCM: 3.0)
   @State private var sessionID = UUID()
+  @State private var finishedSession: Sessions.Session?
+  @State private var showDebug = true
 
-  // Debug overlay
-  @State private var showDebug = true   // turn on while tuning; set false later
+  // Recording & storage
+  @State private var recorder = SessionRecorder()
+  @State private var store = SessionStore()
+  @State private var currentProvider: (any DistanceProvider)?
 
   @Environment(\.dismiss) private var dismiss
   public init() {}
@@ -41,10 +49,10 @@ public struct LiveSessionView: View {
         HStack {
           Text("Push-ups").font(.largeTitle).bold()
           Spacer()
-          Button { dismiss() } label: {
-            Image(systemName: "xmark.circle.fill").font(.title2)
-          }
-          .buttonStyle(.plain)
+          Button("End") { endSession() }
+            .buttonStyle(.borderedProminent)
+          Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").font(.title2) }
+            .buttonStyle(.plain)
         }
 
         // Counter
@@ -56,13 +64,14 @@ public struct LiveSessionView: View {
           .frame(height: 14)
           .clipShape(RoundedRectangle(cornerRadius: 7))
 
-        // Debug overlay (labels & numbers)
         if showDebug { DebugPanel(t: telemetry) }
 
-        // Controls / height chip
+        // Controls
         VStack(spacing: 12) {
-          HeightChipButton(useAuto: $useAuto, manualCM: $manualCM) // UI only; detector uses manualCM
+          HeightChipButton(useAuto: .constant(false), manualCM: $manualCM)
           Toggle("Use synthetic (sim)", isOn: $useSynthetic).tint(.secondary)
+          Text("Height (drop from top): \(String(format: "%.1f", manualCM)) cm")
+            .font(.footnote).foregroundStyle(.secondary)
         }
 
         if let error {
@@ -77,15 +86,17 @@ public struct LiveSessionView: View {
           Button { showDebug.toggle() } label: {
             Image(systemName: showDebug ? "eye.trianglebadge.exclamationmark.fill" : "eye")
           }
-          .help(showDebug ? "Hide debug overlay" : "Show debug overlay")
         }
       }
+      .navigationDestination(item: $finishedSession) { (sess: Sessions.Session) in
+        SessionSummaryView(session: sess, onDone: { dismiss() })
+      }
     }
-    // Seed the detector config and keep it updated
+    // Seed config and keep it in sync
     .onAppear {
-      sessionID = UUID() // new view → new run loop
+      sessionID = UUID()
       currentConfig = RepConfig(
-        heightDeltaCM: manualCM,   // required drop from rolling TOP
+        heightDeltaCM: manualCM,
         rearmEpsCM: 0.5,
         minRepDuration: 0.7,
         smoothingAlpha: 0.25,
@@ -93,26 +104,19 @@ public struct LiveSessionView: View {
         topDecayPerSec: 0.6
       )
     }
-    .onChange(of: manualCM) { _, v in
-      currentConfig.heightDeltaCM = v
-    }
-    // Switching provider type requires restarting the capture task
-    .onChange(of: useSynthetic) { _, _ in sessionID = UUID() }
-    // Run loop restarts whenever sessionID changes
+    .onChange(of: manualCM) { _, v in currentConfig.heightDeltaCM = v }
+    .onChange(of: useSynthetic) { _, _ in sessionID = UUID() } // restart loop
     .task(id: sessionID) { await run() }
   }
 
   // MARK: - Depth Bar (single green threshold)
   @ViewBuilder private var depthBar: some View {
     GeometryReader { geo in
-      // Provide safe defaults until telemetry becomes valid
       let target = telemetry.targetBottomCM.isFinite ? telemetry.targetBottomCM : manualCM
       let cm = telemetry.smoothedCM.isFinite ? telemetry.smoothedCM : target
 
-      // Window for drawing
       let minCM = max(0, target - 6)
       let maxCM = max(minCM + 0.001, target + 10)
-
       let x: (Double) -> CGFloat = { value in
         let n = max(0, min(1, (value - minCM) / (maxCM - minCM)))
         return CGFloat(n) * geo.size.width
@@ -120,28 +124,24 @@ public struct LiveSessionView: View {
 
       ZStack(alignment: .leading) {
         Rectangle().fill(Color.gray.opacity(0.2))
-
-        // Live marker (blue fill)
         Rectangle().fill(.blue).frame(width: max(4, x(cm)))
-
-        // Threshold (green) – the ONLY tick we show
         Path { $0.addRect(.init(x: x(target) - 1, y: 0, width: 2, height: geo.size.height)) }
-          .stroke(style: .init(lineWidth: 2))
-          .foregroundStyle(.green)
+          .stroke(style: .init(lineWidth: 2)).foregroundStyle(.green)
       }
     }
   }
 
-  // MARK: - Capture & detection loop
+  // MARK: - Loop
   private func run() async {
-    // Reset UI for a fresh session
+    // reset UI & recorder
     await MainActor.run {
       reps = 0
       telemetry = RepTelemetry()
       error = nil
+      recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date())
     }
 
-    // Choose provider for this session
+    // Pick provider
     let provider: any DistanceProvider = {
       if useSynthetic { return SyntheticDepthProvider() }
       #if canImport(ARKit)
@@ -150,25 +150,34 @@ public struct LiveSessionView: View {
       return SyntheticDepthProvider()
       #endif
     }()
+    currentProvider = provider
 
     var detector = RepDetector(config: currentConfig)
     var lastConfig = currentConfig
+    var lastSampleT: TimeInterval?
 
     do {
       try await provider.start()
-      defer { provider.stop() }
+      defer { provider.stop(); currentProvider = nil }
 
       for await s in provider.samples {
         let cm = abs(s.cm)
 
-        // Only reset detector when config actually changes
         if currentConfig != lastConfig {
           detector.reset(config: currentConfig)
+          await MainActor.run { recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date()) }
           lastConfig = currentConfig
+          lastSampleT = nil
         }
 
         let events = detector.ingest(cm: cm, t: s.t)
         let snap = detector.telemetry
+
+        // Downsample telemetry to ~3–4 Hz into the recorder
+        if (lastSampleT == nil) || (s.t - (lastSampleT ?? s.t) >= 0.3) {
+          recorder.record(sampleCM: snap.smoothedCM, threshold: snap.targetBottomCM, armed: snap.armed, t: s.t)
+          lastSampleT = s.t
+        }
 
         await MainActor.run {
           telemetry = snap
@@ -176,8 +185,10 @@ public struct LiveSessionView: View {
             switch e {
             case .rep(let c):
               reps = c
+              recorder.record(event: .rep, t: s.t)
               Haptics.repTick()
             case .warningTooFast:
+              recorder.record(event: .warningTooFast, t: s.t)
               Haptics.warning()
             }
           }
@@ -187,9 +198,20 @@ public struct LiveSessionView: View {
       await MainActor.run { self.error = error.localizedDescription }
     }
   }
+
+  private func endSession() {
+    currentProvider?.stop() // this will break the loop soon
+    let session = recorder.finish(endDate: Date())
+    do {
+      try store.save(session)
+    } catch {
+      self.error = "Save failed: \(error.localizedDescription)"
+    }
+    finishedSession = session
+  }
 }
 
-// MARK: - Minimal Debug panel (shows cm, threshold, top, and armed state)
+// MARK: - Debug UI
 private struct DebugPanel: View {
   let t: RepTelemetry
   var body: some View {
