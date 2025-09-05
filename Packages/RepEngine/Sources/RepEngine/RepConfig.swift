@@ -8,105 +8,74 @@
 
 import Foundation
 
-/// Configuration for rep detection.
-/// In this mode, `manualBottomCM` is treated as the required *delta* (cm) you must descend
-/// from the current TOP to count a rep.
+/// Minimal configuration for edge-triggered push-up detection.
+/// Uses a single threshold = (rolling top) - heightDeltaCM.
 public struct RepConfig: Sendable, Equatable {
-  public var useAutoHeight: Bool
-  /// Required descent *delta* from the current top (cm). Acts as "height".
-  public var manualBottomCM: Double
-  /// How much higher than the last top you must rise to arm the next rep (cm).
-  public var topRearmEpsCM: Double
-  /// Unused by this algorithm but kept for tuning/compatibility.
-  public var hysteresisCM: Double
-  public var minBottomHold: Double
+  /// Required drop from the current top to count a rep (cm).
+  public var heightDeltaCM: Double
+  /// How close to the current top you must get to re-arm the next rep (cm).
+  public var rearmEpsCM: Double
+  /// Reject reps faster than this (seconds) to avoid chatter.
   public var minRepDuration: Double
-  public var minSwingForCalibration: Double
-  /// Debug-only: for the overlay ticks (top gate = required delta, bottom gate = 0).
-  public var gateAboveCM: Double
-  public var gateBelowCM: Double
+  /// Low-pass smoothing factor (0..1). Higher = less smoothing.
+  public var smoothingAlpha: Double
+  /// Clamp raw cm into this range (guards against AR spikes).
+  public var clampMinCM: Double
+  public var clampMaxCM: Double
+  /// Top decays by this many cm per second when you’re not near the top.
+  public var topDecayPerSec: Double
 
   public init(
-    useAutoHeight: Bool = true,
-    manualBottomCM: Double = 10,   // required descent from TOP to count
-    topRearmEpsCM: Double = 0.5,   // how much higher than last TOP to re-arm
-    hysteresisCM: Double = 1.5,
-    minBottomHold: Double = 0.0,   // not used now (edge-triggered), keep 0
-    minRepDuration: Double = 0.6,  // reject ultra-fast chatter
-    minSwingForCalibration: Double = 5.0,
-    gateAboveCM: Double = 1.0,
-    gateBelowCM: Double = 0.0
+    heightDeltaCM: Double = 4.0,
+    rearmEpsCM: Double = 0.5,
+    minRepDuration: Double = 0.7,
+    smoothingAlpha: Double = 0.25,
+    clampMinCM: Double = 0.3,
+    clampMaxCM: Double = 8.0,
+    topDecayPerSec: Double = 0.6
   ) {
-    self.useAutoHeight = useAutoHeight
-    self.manualBottomCM = manualBottomCM
-    self.topRearmEpsCM = topRearmEpsCM
-    self.hysteresisCM = hysteresisCM
-    self.minBottomHold = minBottomHold
+    self.heightDeltaCM = heightDeltaCM
+    self.rearmEpsCM = rearmEpsCM
     self.minRepDuration = minRepDuration
-    self.minSwingForCalibration = minSwingForCalibration
-    self.gateAboveCM = gateAboveCM
-    self.gateBelowCM = gateBelowCM
+    self.smoothingAlpha = smoothingAlpha
+    self.clampMinCM = clampMinCM
+    self.clampMaxCM = clampMaxCM
+    self.topDecayPerSec = topDecayPerSec
   }
 }
 
-/// Detector output events.
+/// Events emitted by the detector.
 public enum RepEvent: Sendable, Equatable {
-  case started
   case rep(count: Int)
-  case warningTooShallow
   case warningTooFast
-  case ended
 }
 
-/// Lightweight status for drawing debug UI.
+/// Telemetry for the UI/debug overlay.
 public struct RepTelemetry: Sendable {
-  public enum Phase: String, Sendable { case calibrating, above, bottomHold, ascending }
+  public enum Phase: String, Sendable { case up, down, rearming }
 
+  /// Smoothed, clamped cm sample.
   public let smoothedCM: Double
-  /// For this algorithm, `targetBottomCM` is the dynamic threshold: TOP - heightDelta.
+  /// The single threshold used for counting: threshold = topCM - heightDeltaCM.
   public let targetBottomCM: Double
+  /// Current rolling top used to compute the threshold.
+  public let topCM: Double
+  /// Simple phase hint for the UI.
   public let phase: Phase
-
-  // Debug fields
-  public let calibrated: Bool
-  public let topEst: Double?
-  public let botEst: Double?
-  public let gateAboveCM: Double
-  public let gateBelowCM: Double
-  /// Shown as the gray tick at (target + hysteresisCM). Here we encode TOP + rearmEps as (target + (heightDelta + rearmEps)).
-  public let hysteresisCM: Double
-  /// True when we are armed (have a valid TOP and are waiting to go DOWN).
-  public let metTopGate: Bool
-  /// Not used in edge-triggered mode (kept for UI layout).
-  public let holdElapsed: Double
-  /// Current swing from TOP: (TOP - current cm), non-negative.
-  public let swingCM: Double
+  /// Whether we’re currently armed to count the next rep.
+  public let armed: Bool
 
   public init(
     smoothedCM: Double = .nan,
     targetBottomCM: Double = .nan,
-    phase: Phase = .calibrating,
-    calibrated: Bool = false,
-    topEst: Double? = nil,
-    botEst: Double? = nil,
-    gateAboveCM: Double = 1.0,
-    gateBelowCM: Double = 0.0,
-    hysteresisCM: Double = 1.5,
-    metTopGate: Bool = false,
-    holdElapsed: Double = 0,
-    swingCM: Double = 0
+    topCM: Double = .nan,
+    phase: Phase = .up,
+    armed: Bool = false
   ) {
     self.smoothedCM = smoothedCM
     self.targetBottomCM = targetBottomCM
+    self.topCM = topCM
     self.phase = phase
-    self.calibrated = calibrated
-    self.topEst = topEst
-    self.botEst = botEst
-    self.gateAboveCM = gateAboveCM
-    self.gateBelowCM = gateBelowCM
-    self.hysteresisCM = hysteresisCM
-    self.metTopGate = metTopGate
-    self.holdElapsed = holdElapsed
-    self.swingCM = swingCM
+    self.armed = armed
   }
 }

@@ -13,18 +13,19 @@ import RepEngine
 public struct LiveSessionView: View {
   // MARK: UI state
   @State private var reps = 0
-  @State private var telemetry = RepTelemetry(smoothedCM: .nan, targetBottomCM: .nan, phase: .calibrating)
+  @State private var telemetry = RepTelemetry()     // ← minimal telemetry struct
   @State private var error: String?
 
-  // Height controls (manualCM = required descent from TOP, in cm)
-  @State private var useAuto = true
-  @State private var manualCM: Double = 10
+  // Height control (manualCM = required descent from TOP, in cm)
+  // You can keep/use the "Auto" toggle in the chip UI, but this detector ignores it.
+  @State private var useAuto = false
+  @State private var manualCM: Double = 4.0         // start with 4 cm gap as requested
 
   // Simulator quick toggle
   @State private var useSynthetic = false
 
   // Config tracking & session restarts
-  @State private var currentConfig = RepConfig(useAutoHeight: true, manualBottomCM: 10)
+  @State private var currentConfig = RepConfig(heightDeltaCM: 4.0)
   @State private var sessionID = UUID()
 
   // Debug overlay
@@ -40,15 +41,17 @@ public struct LiveSessionView: View {
         HStack {
           Text("Push-ups").font(.largeTitle).bold()
           Spacer()
-          Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").font(.title2) }
-            .buttonStyle(.plain)
+          Button { dismiss() } label: {
+            Image(systemName: "xmark.circle.fill").font(.title2)
+          }
+          .buttonStyle(.plain)
         }
 
         // Counter
         Text("\(reps)")
           .font(.system(size: 96, weight: .black, design: .rounded))
 
-        // Depth bar (only green threshold)
+        // Depth bar (single green threshold)
         depthBar
           .frame(height: 14)
           .clipShape(RoundedRectangle(cornerRadius: 7))
@@ -58,7 +61,7 @@ public struct LiveSessionView: View {
 
         // Controls / height chip
         VStack(spacing: 12) {
-          HeightChipButton(useAuto: $useAuto, manualCM: $manualCM)
+          HeightChipButton(useAuto: $useAuto, manualCM: $manualCM) // UI only; detector uses manualCM
           Toggle("Use synthetic (sim)", isOn: $useSynthetic).tint(.secondary)
         }
 
@@ -78,18 +81,21 @@ public struct LiveSessionView: View {
         }
       }
     }
-    // Keep config in sync with UI controls
+    // Seed the detector config and keep it updated
     .onAppear {
       sessionID = UUID() // new view → new run loop
-      // We only need manualBottomCM (height delta) + minRepDuration; the detector handles the rest.
       currentConfig = RepConfig(
-        useAutoHeight: useAuto,
-        manualBottomCM: manualCM, // required drop from TOP
-        minRepDuration: 0.7       // ignore ultra-fast chatter
+        heightDeltaCM: manualCM,   // required drop from rolling TOP
+        rearmEpsCM: 0.5,
+        minRepDuration: 0.7,
+        smoothingAlpha: 0.25,
+        clampMinCM: 0.3, clampMaxCM: 6.0,
+        topDecayPerSec: 0.6
       )
     }
-    .onChange(of: useAuto) { _, v in currentConfig.useAutoHeight = v }
-    .onChange(of: manualCM) { _, v in currentConfig.manualBottomCM = v }
+    .onChange(of: manualCM) { _, v in
+      currentConfig.heightDeltaCM = v
+    }
     // Switching provider type requires restarting the capture task
     .onChange(of: useSynthetic) { _, _ in sessionID = UUID() }
     // Run loop restarts whenever sessionID changes
@@ -100,7 +106,7 @@ public struct LiveSessionView: View {
   @ViewBuilder private var depthBar: some View {
     GeometryReader { geo in
       // Provide safe defaults until telemetry becomes valid
-      let target = telemetry.targetBottomCM.isFinite ? telemetry.targetBottomCM : (useAuto ? 10 : manualCM)
+      let target = telemetry.targetBottomCM.isFinite ? telemetry.targetBottomCM : manualCM
       let cm = telemetry.smoothedCM.isFinite ? telemetry.smoothedCM : target
 
       // Window for drawing
@@ -131,7 +137,7 @@ public struct LiveSessionView: View {
     // Reset UI for a fresh session
     await MainActor.run {
       reps = 0
-      telemetry = RepTelemetry(smoothedCM: .nan, targetBottomCM: .nan, phase: .calibrating)
+      telemetry = RepTelemetry()
       error = nil
     }
 
@@ -173,7 +179,6 @@ public struct LiveSessionView: View {
               Haptics.repTick()
             case .warningTooFast:
               Haptics.warning()
-            default: break
             }
           }
         }
@@ -184,7 +189,7 @@ public struct LiveSessionView: View {
   }
 }
 
-// MARK: - Minimal Debug panel (uses existing RepTelemetry fields)
+// MARK: - Minimal Debug panel (shows cm, threshold, top, and armed state)
 private struct DebugPanel: View {
   let t: RepTelemetry
   var body: some View {
@@ -192,10 +197,11 @@ private struct DebugPanel: View {
       HStack {
         Label("cm \(fmt(t.smoothedCM))", systemImage: "ruler")
         Spacer()
-        Text("phase: \(t.phase.rawValue)").font(.footnote).foregroundStyle(.secondary)
+        Text(t.armed ? "armed" : "re-arming").font(.footnote).foregroundStyle(.secondary)
       }
       HStack(spacing: 12) {
         Text("threshold \(fmt(t.targetBottomCM))")
+        Text("top \(fmt(t.topCM))")
       }
       .font(.footnote.monospaced())
     }

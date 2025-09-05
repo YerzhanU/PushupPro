@@ -7,12 +7,13 @@ let package = Package(
   products: [.library(name: "AppUI", targets: ["AppUI"])],
   dependencies: [
     .package(path: "../Sensing"),
-    .package(path: "../RepEngine")
+    .package(path: "../RepEngine"),
+    .package(path: "../Sessions")
   ],
   targets: [
     .target(
       name: "AppUI",
-      dependencies: ["Sensing", "RepEngine"]
+      dependencies: ["Sensing", "RepEngine", "Sessions"]
     ),
     .testTarget(name: "AppUITests", dependencies: ["AppUI"])
   ]
