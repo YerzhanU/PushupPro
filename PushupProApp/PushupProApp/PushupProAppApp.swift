@@ -19,6 +19,12 @@ struct PushupProAppApp: App {
       RootView()
         .environmentObject(auth)
         .task {
+            if let app = FirebaseApp.app() {
+              let o = app.options
+              print("Firebase options → apiKey:\(o.apiKey)  bundleId:\(o.bundleID)")
+            }
+            print("Xcode bundle identifier →", Bundle.main.bundleIdentifier ?? "nil")
+
           // Make sure we at least have an anonymous user.
           await auth.ensureAnonymous()
           // Try to push any locally saved sessions that previously failed.

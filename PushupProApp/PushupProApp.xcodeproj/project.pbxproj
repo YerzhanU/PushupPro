@@ -10,7 +10,6 @@
 		1305A18B2E5298DC0029E6A9 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A18A2E5298DC0029E6A9 /* FirebaseAuth */; };
 		1305A18D2E5298DC0029E6A9 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A18C2E5298DC0029E6A9 /* FirebaseFirestore */; };
 		1305A1A92E52A1190029E6A9 /* AppUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1A82E52A1190029E6A9 /* AppUI */; };
-		1305A1AB2E52A5060029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */; };
 		1305A1B02E52AAB70029E6A9 /* Sensing in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1AF2E52AAB70029E6A9 /* Sensing */; };
 		1305A1BC2E7603A60029E6A9 /* FirebaseBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B82E7600350029E6A9 /* FirebaseBootstrap.swift */; };
 		1305A1BD2E7603A60029E6A9 /* CloudSessionSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */; };
@@ -21,6 +20,7 @@
 		1305A1C22E7603A60029E6A9 /* CloudAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B42E75F52B0029E6A9 /* CloudAuth.swift */; };
 		1305A1C32E7603A60029E6A9 /* AccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B52E75F5320029E6A9 /* AccountSheet.swift */; };
 		1305A1C52E7608FB0029E6A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */; };
+		1305A1EB2E7632060029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,7 +44,6 @@
 		1305A15F2E5297020029E6A9 /* PushupProApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PushupProApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1305A16C2E5297040029E6A9 /* PushupProAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PushupProAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1305A1762E5297040029E6A9 /* PushupProAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PushupProAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1305A1B42E75F52B0029E6A9 /* CloudAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudAuth.swift; sourceTree = "<group>"; };
 		1305A1B52E75F5320029E6A9 /* AccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSheet.swift; sourceTree = "<group>"; };
 		1305A1B62E75F5370029E6A9 /* SessionUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionUploader.swift; sourceTree = "<group>"; };
@@ -54,6 +53,7 @@
 		1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSessionSync.swift; sourceTree = "<group>"; };
 		1305A1BB2E7600530029E6A9 /* PendingUploadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingUploadStore.swift; sourceTree = "<group>"; };
 		1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -111,7 +111,7 @@
 				1305A16F2E5297040029E6A9 /* PushupProAppTests */,
 				1305A1792E5297040029E6A9 /* PushupProAppUITests */,
 				1305A1602E5297020029E6A9 /* Products */,
-				1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */,
+				1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -271,7 +271,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1305A1AB2E52A5060029E6A9 /* GoogleService-Info.plist in Resources */,
+				1305A1EB2E7632060029E6A9 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
