@@ -32,40 +32,27 @@ public struct HomeView: View {
         }
         .buttonStyle(.bordered)
 
-        HeightChip()
+        // Tip now points users to the in-session gear
         ProTip()
+
         Spacer()
       }
       .padding()
       .navigationTitle("Home")
       .navigationDestination(isPresented: $showLive) {
-        LiveSessionView() // ensure LiveSessionView is public in AppUI
+        LiveSessionView()   // make sure this is public in AppUI
       }
     }
   }
 }
 
-/// Quick access height control + auto indicator (copy unchanged for now)
-public struct HeightChip: View {
-  public init() {}
-  public var body: some View {
-    HStack {
-      Image(systemName: "arrow.up.and.down.circle")
-      Text("Height: Auto (10 cm)")
-      Spacer()
-    }
-    .padding(12)
-    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
-  }
-}
-
-/// Banner shown on first screen with the note about height.
+/// Small banner with a general tip (no height controls here anymore).
 public struct ProTip: View {
   public init() {}
   public var body: some View {
     HStack(alignment: .top, spacing: 12) {
       Image(systemName: "lightbulb")
-      Text("Pro tip: set your push-up height. It’s automatic by default, and you can adjust anytime.")
+      Text("You can fine-tune push-up detection (height, re-arm, smoothing) inside a session via the gear icon.")
       Spacer(minLength: 0)
     }
     .padding(12)
