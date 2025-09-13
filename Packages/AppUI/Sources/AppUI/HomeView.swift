@@ -9,9 +9,13 @@
 import SwiftUI
 
 public struct HomeView: View {
+  // Factory for building the live screen; default keeps existing behavior working.
+  private let makeLive: () -> LiveSessionView
   @State private var showLive = false
 
-  public init() {}
+  public init(makeLive: @escaping () -> LiveSessionView = { LiveSessionView() }) {
+    self.makeLive = makeLive
+  }
 
   public var body: some View {
     NavigationStack {
@@ -23,7 +27,7 @@ public struct HomeView: View {
           .buttonStyle(.borderedProminent)
           .frame(maxWidth: .infinity)
 
-        // Quick link to saved sessions (M3)
+        // Quick link to saved sessions
         NavigationLink {
           HistoryView()
         } label: {
@@ -40,7 +44,7 @@ public struct HomeView: View {
       .padding()
       .navigationTitle("Home")
       .navigationDestination(isPresented: $showLive) {
-        LiveSessionView()   // make sure this is public in AppUI
+        makeLive()  // <- app injects LiveSessionView with callback
       }
     }
   }

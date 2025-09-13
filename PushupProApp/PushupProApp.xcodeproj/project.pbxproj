@@ -12,6 +12,15 @@
 		1305A1A92E52A1190029E6A9 /* AppUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1A82E52A1190029E6A9 /* AppUI */; };
 		1305A1AB2E52A5060029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */; };
 		1305A1B02E52AAB70029E6A9 /* Sensing in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1AF2E52AAB70029E6A9 /* Sensing */; };
+		1305A1BC2E7603A60029E6A9 /* FirebaseBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B82E7600350029E6A9 /* FirebaseBootstrap.swift */; };
+		1305A1BD2E7603A60029E6A9 /* CloudSessionSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */; };
+		1305A1BE2E7603A60029E6A9 /* LiveSessionScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B72E75F5520029E6A9 /* LiveSessionScreen.swift */; };
+		1305A1BF2E7603A60029E6A9 /* PendingUploadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1BB2E7600530029E6A9 /* PendingUploadStore.swift */; };
+		1305A1C02E7603A60029E6A9 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B92E7600450029E6A9 /* AuthService.swift */; };
+		1305A1C12E7603A60029E6A9 /* SessionUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B62E75F5370029E6A9 /* SessionUploader.swift */; };
+		1305A1C22E7603A60029E6A9 /* CloudAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B42E75F52B0029E6A9 /* CloudAuth.swift */; };
+		1305A1C32E7603A60029E6A9 /* AccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B52E75F5320029E6A9 /* AccountSheet.swift */; };
+		1305A1C52E7608FB0029E6A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +45,15 @@
 		1305A16C2E5297040029E6A9 /* PushupProAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PushupProAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1305A1762E5297040029E6A9 /* PushupProAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PushupProAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1305A1AA2E52A5060029E6A9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		1305A1B42E75F52B0029E6A9 /* CloudAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudAuth.swift; sourceTree = "<group>"; };
+		1305A1B52E75F5320029E6A9 /* AccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSheet.swift; sourceTree = "<group>"; };
+		1305A1B62E75F5370029E6A9 /* SessionUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionUploader.swift; sourceTree = "<group>"; };
+		1305A1B72E75F5520029E6A9 /* LiveSessionScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionScreen.swift; sourceTree = "<group>"; };
+		1305A1B82E7600350029E6A9 /* FirebaseBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseBootstrap.swift; sourceTree = "<group>"; };
+		1305A1B92E7600450029E6A9 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSessionSync.swift; sourceTree = "<group>"; };
+		1305A1BB2E7600530029E6A9 /* PendingUploadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingUploadStore.swift; sourceTree = "<group>"; };
+		1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -88,6 +106,7 @@
 		1305A1562E5297020029E6A9 = {
 			isa = PBXGroup;
 			children = (
+				1305A1B32E75F51A0029E6A9 /* Cloud */,
 				1305A1612E5297020029E6A9 /* PushupProApp */,
 				1305A16F2E5297040029E6A9 /* PushupProAppTests */,
 				1305A1792E5297040029E6A9 /* PushupProAppUITests */,
@@ -104,6 +123,22 @@
 				1305A1762E5297040029E6A9 /* PushupProAppUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1305A1B32E75F51A0029E6A9 /* Cloud */ = {
+			isa = PBXGroup;
+			children = (
+				1305A1B42E75F52B0029E6A9 /* CloudAuth.swift */,
+				1305A1B52E75F5320029E6A9 /* AccountSheet.swift */,
+				1305A1BB2E7600530029E6A9 /* PendingUploadStore.swift */,
+				1305A1B82E7600350029E6A9 /* FirebaseBootstrap.swift */,
+				1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */,
+				1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */,
+				1305A1B92E7600450029E6A9 /* AuthService.swift */,
+				1305A1B72E75F5520029E6A9 /* LiveSessionScreen.swift */,
+				1305A1B62E75F5370029E6A9 /* SessionUploader.swift */,
+			);
+			path = Cloud;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -281,6 +316,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1305A1BC2E7603A60029E6A9 /* FirebaseBootstrap.swift in Sources */,
+				1305A1BD2E7603A60029E6A9 /* CloudSessionSync.swift in Sources */,
+				1305A1BE2E7603A60029E6A9 /* LiveSessionScreen.swift in Sources */,
+				1305A1C52E7608FB0029E6A9 /* AppDelegate.swift in Sources */,
+				1305A1BF2E7603A60029E6A9 /* PendingUploadStore.swift in Sources */,
+				1305A1C02E7603A60029E6A9 /* AuthService.swift in Sources */,
+				1305A1C12E7603A60029E6A9 /* SessionUploader.swift in Sources */,
+				1305A1C22E7603A60029E6A9 /* CloudAuth.swift in Sources */,
+				1305A1C32E7603A60029E6A9 /* AccountSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
