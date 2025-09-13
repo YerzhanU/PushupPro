@@ -2,46 +2,50 @@
 //  LiveSessionView.swift
 //  AppUI
 //
-//  Created by Yerzhan Utkelbayev on 01/09/2025.
-//
-
-
-//
-//  LiveSessionView.swift
-//  AppUI
-//
 
 import SwiftUI
 import Sensing
 import RepEngine
 import Sessions
+#if canImport(ARKit)
+import ARKit
+#endif
 
 public struct LiveSessionView: View {
-  // MARK: UI state
+  // MARK: - Injection
+  private let onSessionSaved: ((Sessions.Session) -> Void)?
+
+  // MARK: - UI state
   @State private var reps = 0
   @State private var telemetry = RepTelemetry()
   @State private var error: String?
+  @State private var statusText: String = "Starting…"
+  @State private var providerLabel: String = "—"
 
-  // Height control = required descent from rolling TOP (cm)
-  @State private var manualCM: Double = 3.0     // good default for 0.9↔︎4.0 cm swing
-
-  // Config / session
+  // Detector config
+  @State private var manualCM: Double = 3.0
   @State private var currentConfig = RepConfig(heightDeltaCM: 3.0)
+
+  // Session
   @State private var sessionID = UUID()
   @State private var finishedSession: Sessions.Session?
   @State private var showDebug = true
 
-  // Recording & storage
+  // Recording & provider
   @State private var recorder = SessionRecorder()
   @State private var store = SessionStore()
   @State private var currentProvider: (any DistanceProvider)?
+  @State private var lastSampleWallTime: Date?
 
   @Environment(\.dismiss) private var dismiss
-  public init() {}
+
+  public init(onSessionSaved: ((Sessions.Session) -> Void)? = nil) {
+    self.onSessionSaved = onSessionSaved
+  }
 
   public var body: some View {
     NavigationStack {
-      VStack(spacing: 24) {
+      VStack(spacing: 16) {
         // Header
         HStack {
           Text("Push-ups").font(.largeTitle).bold()
@@ -51,6 +55,18 @@ public struct LiveSessionView: View {
           Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").font(.title2) }
             .buttonStyle(.plain)
         }
+
+        // Status row
+        HStack(spacing: 8) {
+          Circle()
+            .fill(hasRecentSample ? Color.green : Color.yellow)
+            .frame(width: 10, height: 10)
+          Text(statusText).font(.footnote).foregroundStyle(.secondary)
+          Spacer()
+          Text(providerLabel).font(.footnote).foregroundStyle(.secondary)
+        }
+        .padding(8)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
 
         // Counter
         Text("\(reps)")
@@ -78,7 +94,11 @@ public struct LiveSessionView: View {
       }
     }
     .onAppear {
+      // New run loop each time we appear
       sessionID = UUID()
+      statusText = "Starting…"
+      providerLabel = "—"
+
       currentConfig = RepConfig(
         heightDeltaCM: manualCM,
         rearmEpsCM: 0.5,
@@ -88,10 +108,19 @@ public struct LiveSessionView: View {
         topDecayPerSec: 0.6
       )
     }
+    .onDisappear {
+      currentProvider?.stop()
+      currentProvider = nil
+    }
     .task(id: sessionID) { await run() }
   }
 
-  // MARK: - Depth Bar (single green tick)
+  private var hasRecentSample: Bool {
+    guard let last = lastSampleWallTime else { return false }
+    return Date().timeIntervalSince(last) <= 1.5
+  }
+
+  // MARK: - Depth Bar
   @ViewBuilder private var depthBar: some View {
     GeometryReader { geo in
       let target = telemetry.targetBottomCM.isFinite ? telemetry.targetBottomCM : manualCM
@@ -114,41 +143,67 @@ public struct LiveSessionView: View {
     }
   }
 
-  // MARK: - Loop
+  // MARK: - Loop (ARKit-only)
   private func run() async {
     await MainActor.run {
       reps = 0
       telemetry = RepTelemetry()
       error = nil
+      lastSampleWallTime = nil
       recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date())
     }
 
-    // Provider (device only)
-    #if canImport(ARKit) && !targetEnvironment(simulator)
-    let provider: any DistanceProvider = ARKitDepthProvider()
-    #else
+    // Simulator / Unsupported guard
+    #if !canImport(ARKit)
     await MainActor.run {
-      self.error = "TrueDepth depth is not available in the Simulator. Please run on a real device."
+      self.error = "ARKit not available on this platform."
+      self.statusText = "Unsupported"
     }
     return
+    #else
+    if !ARFaceTrackingConfiguration.isSupported {
+      await MainActor.run {
+        self.error = "This device doesn’t support TrueDepth face tracking."
+        self.statusText = "Unsupported"
+      }
+      return
+    }
     #endif
 
+    // Start ARKit provider
+    let provider: any DistanceProvider = ARKitDepthProvider()
     currentProvider = provider
+    do {
+      try await provider.start()
+      await MainActor.run {
+        providerLabel = "ARKit TrueDepth"
+        statusText = "Running…"
+      }
+    } catch {
+      await MainActor.run {
+        self.error = "Failed to start TrueDepth: \(error.localizedDescription)"
+        self.statusText = "Error"
+      }
+      return
+    }
 
     var detector = RepDetector(config: currentConfig)
     var lastConfig = currentConfig
     var lastSampleT: TimeInterval?
 
     do {
-      try await provider.start()
       defer { provider.stop(); currentProvider = nil }
 
       for await s in provider.samples {
+        await MainActor.run { lastSampleWallTime = Date() }
+
         let cm = abs(s.cm)
 
         if currentConfig != lastConfig {
           detector.reset(config: currentConfig)
-          await MainActor.run { recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date()) }
+          await MainActor.run {
+            recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date())
+          }
           lastConfig = currentConfig
           lastSampleT = nil
         }
@@ -177,7 +232,10 @@ public struct LiveSessionView: View {
         }
       }
     } catch {
-      await MainActor.run { self.error = error.localizedDescription }
+      await MainActor.run {
+        self.error = error.localizedDescription
+        self.statusText = "Error"
+      }
     }
   }
 
@@ -185,10 +243,11 @@ public struct LiveSessionView: View {
     currentProvider?.stop()
     let session = recorder.finish(endDate: Date())
     do {
-      try store.save(session)
+      try store.save(session) // local-first
     } catch {
       self.error = "Save failed: \(error.localizedDescription)"
     }
+    onSessionSaved?(session)  // let the app upload if you wired it
     finishedSession = session
   }
 }
