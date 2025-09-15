@@ -21,6 +21,8 @@
 		1305A1C32E7603A60029E6A9 /* AccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B52E75F5320029E6A9 /* AccountSheet.swift */; };
 		1305A1C52E7608FB0029E6A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */; };
 		1305A1EB2E7632060029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */; };
+		1305A1ED2E78B6ED0029E6A9 /* CloudSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1EC2E78B6ED0029E6A9 /* CloudSessionStore.swift */; };
+		1305A1EF2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1EE2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +56,8 @@
 		1305A1BB2E7600530029E6A9 /* PendingUploadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingUploadStore.swift; sourceTree = "<group>"; };
 		1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		1305A1EC2E78B6ED0029E6A9 /* CloudSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSessionStore.swift; sourceTree = "<group>"; };
+		1305A1EE2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedHistoryScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -131,7 +135,9 @@
 				1305A1B42E75F52B0029E6A9 /* CloudAuth.swift */,
 				1305A1B52E75F5320029E6A9 /* AccountSheet.swift */,
 				1305A1BB2E7600530029E6A9 /* PendingUploadStore.swift */,
+				1305A1EE2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift */,
 				1305A1B82E7600350029E6A9 /* FirebaseBootstrap.swift */,
+				1305A1EC2E78B6ED0029E6A9 /* CloudSessionStore.swift */,
 				1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */,
 				1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */,
 				1305A1B92E7600450029E6A9 /* AuthService.swift */,
@@ -322,8 +328,10 @@
 				1305A1C52E7608FB0029E6A9 /* AppDelegate.swift in Sources */,
 				1305A1BF2E7603A60029E6A9 /* PendingUploadStore.swift in Sources */,
 				1305A1C02E7603A60029E6A9 /* AuthService.swift in Sources */,
+				1305A1ED2E78B6ED0029E6A9 /* CloudSessionStore.swift in Sources */,
 				1305A1C12E7603A60029E6A9 /* SessionUploader.swift in Sources */,
 				1305A1C22E7603A60029E6A9 /* CloudAuth.swift in Sources */,
+				1305A1EF2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift in Sources */,
 				1305A1C32E7603A60029E6A9 /* AccountSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -9,54 +9,56 @@
 import SwiftUI
 
 public struct HomeView: View {
-  // Factory for building the live screen; default keeps existing behavior working.
+  // FACTORIES (app can inject Live + History)
   private let makeLive: () -> LiveSessionView
-  @State private var showLive = false
+  private let makeHistory: () -> AnyView
 
-  public init(makeLive: @escaping () -> LiveSessionView = { LiveSessionView() }) {
+  @State private var showLive = false
+  @State private var showHistory = false
+
+  public init(
+    makeLive: @escaping () -> LiveSessionView = { LiveSessionView() },
+    makeHistory: @escaping () -> AnyView = { AnyView(HistoryView()) }
+  ) {
     self.makeLive = makeLive
+    self.makeHistory = makeHistory
   }
 
   public var body: some View {
     NavigationStack {
       VStack(spacing: 16) {
-        Text("Push-ups")
-          .font(.largeTitle).bold()
+        Text("Push-ups").font(.largeTitle).bold()
 
         Button("Start Session") { showLive = true }
           .buttonStyle(.borderedProminent)
           .frame(maxWidth: .infinity)
 
-        // Quick link to saved sessions
-        NavigationLink {
-          HistoryView()
+        Button {
+          showHistory = true
         } label: {
           Label("History", systemImage: "clock.arrow.circlepath")
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
 
-        // Tip now points users to the in-session gear
         ProTip()
-
         Spacer()
       }
       .padding()
       .navigationTitle("Home")
-      .navigationDestination(isPresented: $showLive) {
-        makeLive()  // <- app injects LiveSessionView with callback
-      }
+      .navigationDestination(isPresented: $showLive) { makeLive() }
+      .navigationDestination(isPresented: $showHistory) { makeHistory() }
     }
   }
 }
 
-/// Small banner with a general tip (no height controls here anymore).
+/// Small banner with a general tip.
 public struct ProTip: View {
   public init() {}
   public var body: some View {
     HStack(alignment: .top, spacing: 12) {
       Image(systemName: "lightbulb")
-      Text("You can fine-tune push-up detection (height, re-arm, smoothing) inside a session via the gear icon.")
+      Text("Your sessions sync to the cloud (when signed in). Open History to review them anytime.")
       Spacer(minLength: 0)
     }
     .padding(12)
