@@ -2,62 +2,278 @@
 //  AuthService.swift
 //  PushupProApp
 //
-//  Created by Yerzhan Utkelbayev on 13/09/2025.
-//
 
-
-// AuthService.swift
 import Foundation
+import SwiftUI
 import FirebaseCore
 import FirebaseAuth
+
+#if canImport(AuthenticationServices)
+import AuthenticationServices
+#endif
+
+#if canImport(GoogleSignIn)
+import GoogleSignIn
+#endif
+
+#if canImport(CryptoKit)
+import CryptoKit
+#endif
 
 @MainActor
 final class AuthService: ObservableObject {
   static let shared = AuthService()
 
-  @Published private(set) var user: User?
-  @Published private(set) var isAnonymous = true
+  /// Leave false while we debug.
+  static let allowAnonymous = false
 
-  private init() {}
+  @Published var user: User?
+  @Published var isAnonymous: Bool = true
+  @Published var email: String?
 
-  /// Ensure we at least have an anonymous user and log every step.
+  private var authHandle: AuthStateDidChangeListenerHandle?
+
+  private init() {
+    authHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+      guard let self else { return }
+      self.user = user
+      self.isAnonymous = user?.isAnonymous ?? true
+      self.email = user?.email
+      self.printAuthDiagnostics(tag: "StateListener")
+    }
+  }
+
+  deinit { if let h = authHandle { Auth.auth().removeStateDidChangeListener(h) } }
+
+  // MARK: - Diagnostics
+
+  func printAuthDiagnostics(tag: String) {
+    let app = FirebaseApp.app()
+    let opts = app?.options
+    let u = Auth.auth().currentUser
+    let providers = u?.providerData.map { $0.providerID }.joined(separator: ",") ?? "none"
+    print("""
+    [Diag:\(tag)]
+      FirebaseApp.exists=\(app != nil)
+      projectID=\(opts?.projectID ?? "nil")
+      apiKey=\(opts?.apiKey ?? "nil")
+      bundleID=\(opts?.bundleID ?? "nil")
+      clientID=\(opts?.clientID ?? "nil")
+      user.uid=\(u?.uid ?? "nil")
+      user.isAnonymous=\(u?.isAnonymous ?? false)
+      user.email=\(u?.email ?? "nil")
+      user.providers=[\(providers)]
+    """)
+  }
+
+  // MARK: - Anonymous (kept but feature-flagged)
+
   func ensureAnonymous() async {
-    // 1) Prove Firebase is configured before we call Auth
-    if FirebaseApp.app() == nil {
-      print("AuthService.ensureAnonymous: FirebaseApp not configured yet")
+    guard FirebaseApp.app() != nil else {
+      print("[Anon] FirebaseApp not configured; skip")
       return
     }
-
-    // 2) Already signed in?
+    guard Self.allowAnonymous else {
+      print("[Anon] Skipped (allowAnonymous=false)")
+      return
+    }
     if let u = Auth.auth().currentUser {
       self.user = u
       self.isAnonymous = u.isAnonymous
-      print("AuthService: already signed in uid=\(u.uid) anon=\(u.isAnonymous)")
+      print("[Anon] Current user exists isAnon=\(u.isAnonymous) uid=\(u.uid)")
       return
     }
-
-    // 3) Try anonymous sign-in and LOG ERRORS
     do {
       let result = try await Auth.auth().signInAnonymously()
       self.user = result.user
       self.isAnonymous = result.user.isAnonymous
-      print("AuthService: signed in anonymously uid=\(result.user.uid)")
+      print("[Anon] Signed in anonymously uid=\(result.user.uid)")
     } catch {
       let ns = error as NSError
-      print("""
-      AuthService: anonymous sign-in FAILED
-      code=\(ns.code) domain=\(ns.domain)
-      desc=\(ns.localizedDescription)
-      userInfo=\(ns.userInfo)
-      """)
+      print("[Anon] FAILED \(ns.domain)#\(ns.code): \(ns.localizedDescription) userInfo=\(ns.userInfo)")
     }
+  }
+
+  func signOutAndBecomeGuest() async throws {
+    try Auth.auth().signOut()
+    self.user = nil
+    self.isAnonymous = true
+    print("[SignOut] Completed. Recreating guest? \(Self.allowAnonymous)")
+    if Self.allowAnonymous { await ensureAnonymous() }
   }
 
   var uid: String? { user?.uid ?? Auth.auth().currentUser?.uid }
 
-  func signOut() throws {
-    try Auth.auth().signOut()
-    self.user = nil
-    self.isAnonymous = true
+  // MARK: - Google (unchanged)
+
+  #if canImport(GoogleSignIn)
+  func signInWithGoogle(presenting presenter: UIViewController) async throws {
+    guard FirebaseApp.app() != nil else {
+      throw NSError(domain: "AuthService", code: -10,
+                    userInfo: [NSLocalizedDescriptionKey: "FirebaseApp not configured"])
+    }
+    guard let clientID = FirebaseApp.app()?.options.clientID else {
+      throw NSError(domain: "AuthService", code: -11,
+                    userInfo: [NSLocalizedDescriptionKey: "Missing clientID"])
+    }
+    let config = GIDConfiguration(clientID: clientID)
+    GIDSignIn.sharedInstance.configuration = config
+
+    let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
+    guard let idToken = result.user.idToken?.tokenString else {
+      throw NSError(domain: "AuthService", code: -12,
+                    userInfo: [NSLocalizedDescriptionKey: "Missing Google ID token"])
+    }
+    let credential = GoogleAuthProvider.credential(withIDToken: idToken,
+                                                   accessToken: result.user.accessToken.tokenString)
+    try await linkOrSignIn(with: credential)
+  }
+  #endif
+
+  // MARK: - Apple
+
+  func signInWithApple(presentationAnchor anchor: ASPresentationAnchor) async throws {
+    #if !canImport(AuthenticationServices)
+    throw NSError(domain: "AuthService", code: -20,
+                  userInfo: [NSLocalizedDescriptionKey: "AuthenticationServices not available"])
+    #else
+    guard FirebaseApp.app() != nil else {
+      throw NSError(domain: "AuthService", code: -21,
+                    userInfo: [NSLocalizedDescriptionKey: "FirebaseApp not configured"])
+    }
+
+    let nonce = Self.randomNonceString()
+    let hashed = Self.sha256(nonce)
+
+    let provider = ASAuthorizationAppleIDProvider()
+    let request = provider.createRequest()
+    request.requestedScopes = [.fullName, .email]
+    request.nonce = hashed
+
+    let controller = ASAuthorizationController(authorizationRequests: [request])
+    let delegate = AppleDelegate()
+    controller.delegate = delegate
+    controller.presentationContextProvider = delegate.makePresentationProvider(anchor: anchor)
+
+    // Present Apple UI
+    let appleIDCred: ASAuthorizationAppleIDCredential
+    do {
+      appleIDCred = try await delegate.perform(controller: controller)
+    } catch {
+      let ns = error as NSError
+      print("[Apple] Apple UI failed \(ns.domain)#\(ns.code) \(ns.localizedDescription) userInfo=\(ns.userInfo)")
+      throw error
+    }
+
+    guard let idTokenData = appleIDCred.identityToken,
+          let idTokenString = String(data: idTokenData, encoding: .utf8) else {
+      throw NSError(domain: "AuthService", code: -23,
+                    userInfo: [NSLocalizedDescriptionKey: "Missing Apple identity token"])
+    }
+
+    let credential = OAuthProvider.appleCredential(
+      withIDToken: idTokenString,
+      rawNonce: nonce,
+      fullName: appleIDCred.fullName
+    )
+
+    do {
+      try await linkOrSignIn(with: credential)
+    } catch {
+      let ns = error as NSError
+      print("[Apple] Firebase link/sign-in failed \(ns.domain)#\(ns.code) \(ns.localizedDescription) userInfo=\(ns.userInfo)")
+      throw error
+    }
+    #endif
+  }
+
+  // Link if anonymous; otherwise sign in. On conflict, sign in to existing account.
+  private func linkOrSignIn(with credential: AuthCredential) async throws {
+    if let u = Auth.auth().currentUser, u.isAnonymous {
+      do {
+        _ = try await u.link(with: credential)
+        print("[Link] Linked to anonymous → uid stays \(u.uid)")
+      } catch {
+        let ns = error as NSError
+        if let code = AuthErrorCode(rawValue: ns.code),
+           code == .credentialAlreadyInUse || code == .emailAlreadyInUse {
+          _ = try await Auth.auth().signIn(with: credential)
+          print("[Link] Credential already in use → signed in to existing account")
+        } else {
+          print("[Link] Failed \(ns.domain)#\(ns.code) \(ns.localizedDescription) userInfo=\(ns.userInfo)")
+          throw error
+        }
+      }
+    } else {
+      _ = try await Auth.auth().signIn(with: credential)
+      print("[SignIn] Signed in with provider")
+    }
+    printAuthDiagnostics(tag: "PostSignIn")
+  }
+
+  // MARK: - Nonce helpers
+
+  private static func randomNonceString(length: Int = 32) -> String {
+    precondition(length > 0)
+    let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+    var result = ""
+    var remainingLength = length
+    while remainingLength > 0 {
+      var random: UInt8 = 0
+      let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+      if status != errSecSuccess { fatalError("SecRandomCopyBytes failed") }
+      if random < charset.count {
+        result.append(charset[Int(random)])
+        remainingLength -= 1
+      }
+    }
+    return result
+  }
+
+  private static func sha256(_ input: String) -> String {
+    guard let data = input.data(using: .utf8) else { return input }
+    #if canImport(CryptoKit)
+    let hashed = SHA256.hash(data: data)
+    return hashed.map { String(format: "%02x", $0) }.joined()
+    #else
+    return input
+    #endif
   }
 }
+
+#if canImport(AuthenticationServices)
+private final class AppleDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+  private var continuation: CheckedContinuation<ASAuthorizationAppleIDCredential, Error>?
+  private var anchor: ASPresentationAnchor?
+
+  func makePresentationProvider(anchor: ASPresentationAnchor) -> ASAuthorizationControllerPresentationContextProviding {
+    self.anchor = anchor
+    return self
+  }
+  func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+    anchor ?? ASPresentationAnchor()
+  }
+  func perform(controller: ASAuthorizationController) async throws -> ASAuthorizationAppleIDCredential {
+    try await withCheckedThrowingContinuation { cont in
+      self.continuation = cont
+      controller.performRequests()
+    }
+  }
+  func authorizationController(controller: ASAuthorizationController,
+                               didCompleteWithAuthorization authorization: ASAuthorization) {
+    if let cred = authorization.credential as? ASAuthorizationAppleIDCredential {
+      continuation?.resume(returning: cred)
+    } else {
+      continuation?.resume(throwing: NSError(
+        domain: "AuthService", code: -22,
+        userInfo: [NSLocalizedDescriptionKey: "Unexpected Apple credential"]))
+    }
+    continuation = nil
+  }
+  func authorizationController(controller: ASAuthorizationController,
+                               didCompleteWithError error: Error) {
+    continuation?.resume(throwing: error)
+    continuation = nil
+  }
+}
+#endif

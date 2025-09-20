@@ -3,6 +3,11 @@
 //  AppUI
 //
 
+//
+//  LiveSessionView.swift
+//  AppUI
+//
+
 import SwiftUI
 import Sensing
 import RepEngine
@@ -12,15 +17,15 @@ import ARKit
 #endif
 
 public struct LiveSessionView: View {
-  // MARK: - Injection
+  // MARK: Injection
   private let onSessionSaved: ((Sessions.Session) -> Void)?
 
-  // MARK: - UI state
+  // MARK: UI state
   @State private var reps = 0
   @State private var telemetry = RepTelemetry()
   @State private var error: String?
-  @State private var statusText: String = "Starting…"
-  @State private var providerLabel: String = "—"
+  @State private var statusText = "Starting…"
+  @State private var providerLabel = "—"
 
   // Detector config
   @State private var manualCM: Double = 3.0
@@ -46,21 +51,16 @@ public struct LiveSessionView: View {
   public var body: some View {
     NavigationStack {
       VStack(spacing: 16) {
-        // Header
         HStack {
           Text("Push-ups").font(.largeTitle).bold()
           Spacer()
-          Button("End") { endSession() }
-            .buttonStyle(.borderedProminent)
+          Button("End") { endSession() }.buttonStyle(.borderedProminent)
           Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").font(.title2) }
             .buttonStyle(.plain)
         }
 
-        // Status row
         HStack(spacing: 8) {
-          Circle()
-            .fill(hasRecentSample ? Color.green : Color.yellow)
-            .frame(width: 10, height: 10)
+          Circle().fill(hasRecentSample ? Color.green : Color.yellow).frame(width: 10, height: 10)
           Text(statusText).font(.footnote).foregroundStyle(.secondary)
           Spacer()
           Text(providerLabel).font(.footnote).foregroundStyle(.secondary)
@@ -68,11 +68,9 @@ public struct LiveSessionView: View {
         .padding(8)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
 
-        // Counter
         Text("\(reps)")
           .font(.system(size: 96, weight: .black, design: .rounded))
 
-        // Depth bar (single green threshold)
         depthBar
           .frame(height: 14)
           .clipShape(RoundedRectangle(cornerRadius: 7))
@@ -80,25 +78,21 @@ public struct LiveSessionView: View {
         if showDebug { DebugPanel(t: telemetry) }
 
         if let error {
-          Text(error)
-            .foregroundStyle(.red)
-            .multilineTextAlignment(.center)
+          Text(error).foregroundStyle(.red).multilineTextAlignment(.center)
         }
 
         Spacer()
       }
       .padding()
       .navigationTitle("Session")
-      .navigationDestination(item: $finishedSession) { (sess: Sessions.Session) in
-        SessionSummaryView(session: sess, onDone: { dismiss() })
+      .navigationDestination(item: $finishedSession) { s in
+        SessionSummaryView(session: s, onDone: { dismiss() })
       }
     }
     .onAppear {
-      // New run loop each time we appear
       sessionID = UUID()
       statusText = "Starting…"
       providerLabel = "—"
-
       currentConfig = RepConfig(
         heightDeltaCM: manualCM,
         rearmEpsCM: 0.5,
@@ -120,7 +114,7 @@ public struct LiveSessionView: View {
     return Date().timeIntervalSince(last) <= 1.5
   }
 
-  // MARK: - Depth Bar
+  // MARK: Depth bar
   @ViewBuilder private var depthBar: some View {
     GeometryReader { geo in
       let target = telemetry.targetBottomCM.isFinite ? telemetry.targetBottomCM : manualCM
@@ -143,7 +137,7 @@ public struct LiveSessionView: View {
     }
   }
 
-  // MARK: - Loop (ARKit-only)
+  // MARK: Loop (ARKit-only)
   private func run() async {
     await MainActor.run {
       reps = 0
@@ -153,7 +147,6 @@ public struct LiveSessionView: View {
       recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date())
     }
 
-    // Simulator / Unsupported guard
     #if !canImport(ARKit)
     await MainActor.run {
       self.error = "ARKit not available on this platform."
@@ -170,7 +163,6 @@ public struct LiveSessionView: View {
     }
     #endif
 
-    // Start ARKit provider
     let provider: any DistanceProvider = ARKitDepthProvider()
     currentProvider = provider
     do {
@@ -187,54 +179,48 @@ public struct LiveSessionView: View {
       return
     }
 
+    // No try/catch here — nothing throws in the loop.
+    defer { provider.stop(); currentProvider = nil }
+
     var detector = RepDetector(config: currentConfig)
     var lastConfig = currentConfig
     var lastSampleT: TimeInterval?
 
-    do {
-      defer { provider.stop(); currentProvider = nil }
+    for await s in provider.samples {
+      await MainActor.run { lastSampleWallTime = Date() }
 
-      for await s in provider.samples {
-        await MainActor.run { lastSampleWallTime = Date() }
+      let cm = abs(s.cm)
 
-        let cm = abs(s.cm)
-
-        if currentConfig != lastConfig {
-          detector.reset(config: currentConfig)
-          await MainActor.run {
-            recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date())
-          }
-          lastConfig = currentConfig
-          lastSampleT = nil
-        }
-
-        let events = detector.ingest(cm: cm, t: s.t)
-        let snap = detector.telemetry
-
-        if (lastSampleT == nil) || (s.t - (lastSampleT ?? s.t) >= 0.3) {
-          recorder.record(sampleCM: snap.smoothedCM, threshold: snap.targetBottomCM, armed: snap.armed, t: s.t)
-          lastSampleT = s.t
-        }
-
+      if currentConfig != lastConfig {
+        detector.reset(config: currentConfig)
         await MainActor.run {
-          telemetry = snap
-          for e in events {
-            switch e {
-            case .rep(let c):
-              reps = c
-              recorder.record(event: .rep, t: s.t)
-              Haptics.repTick()
-            case .warningTooFast:
-              recorder.record(event: .warningTooFast, t: s.t)
-              Haptics.warning()
-            }
+          recorder.start(heightDeltaCM: currentConfig.heightDeltaCM, startDate: Date())
+        }
+        lastConfig = currentConfig
+        lastSampleT = nil
+      }
+
+      let events = detector.ingest(cm: cm, t: s.t)
+      let snap = detector.telemetry
+
+      if (lastSampleT == nil) || (s.t - (lastSampleT ?? s.t) >= 0.3) {
+        recorder.record(sampleCM: snap.smoothedCM, threshold: snap.targetBottomCM, armed: snap.armed, t: s.t)
+        lastSampleT = s.t
+      }
+
+      await MainActor.run {
+        telemetry = snap
+        for e in events {
+          switch e {
+          case .rep(let c):
+            reps = c
+            recorder.record(event: .rep, t: s.t)
+            Haptics.repTick()
+          case .warningTooFast:
+            recorder.record(event: .warningTooFast, t: s.t)
+            Haptics.warning()
           }
         }
-      }
-    } catch {
-      await MainActor.run {
-        self.error = error.localizedDescription
-        self.statusText = "Error"
       }
     }
   }
@@ -243,11 +229,11 @@ public struct LiveSessionView: View {
     currentProvider?.stop()
     let session = recorder.finish(endDate: Date())
     do {
-      try store.save(session) // local-first
+      try store.save(session)
     } catch {
       self.error = "Save failed: \(error.localizedDescription)"
     }
-    onSessionSaved?(session)  // let the app upload if you wired it
+    onSessionSaved?(session)
     finishedSession = session
   }
 }
@@ -260,9 +246,7 @@ private struct DebugPanel: View {
       HStack {
         Label("cm \(fmt(t.smoothedCM))", systemImage: "ruler")
         Spacer()
-        Text(t.armed ? "armed" : "re-arming")
-          .font(.footnote)
-          .foregroundStyle(.secondary)
+        Text(t.armed ? "armed" : "re-arming").font(.footnote).foregroundStyle(.secondary)
       }
       HStack(spacing: 12) {
         Text("threshold \(fmt(t.targetBottomCM))")

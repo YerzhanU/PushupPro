@@ -20,9 +20,11 @@
 		1305A1C22E7603A60029E6A9 /* CloudAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B42E75F52B0029E6A9 /* CloudAuth.swift */; };
 		1305A1C32E7603A60029E6A9 /* AccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1B52E75F5320029E6A9 /* AccountSheet.swift */; };
 		1305A1C52E7608FB0029E6A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */; };
-		1305A1EB2E7632060029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */; };
 		1305A1ED2E78B6ED0029E6A9 /* CloudSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1EC2E78B6ED0029E6A9 /* CloudSessionStore.swift */; };
 		1305A1EF2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A1EE2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift */; };
+		1305A1F62E7DF8DD0029E6A9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1305A1F52E7DF8DD0029E6A9 /* GoogleService-Info.plist */; };
+		1305A1FA2E7DFD6D0029E6A9 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1F92E7DFD6D0029E6A9 /* GoogleSignIn */; };
+		1305A1FC2E7DFD6D0029E6A9 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1305A1FB2E7DFD6D0029E6A9 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,14 +57,27 @@
 		1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSessionSync.swift; sourceTree = "<group>"; };
 		1305A1BB2E7600530029E6A9 /* PendingUploadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingUploadStore.swift; sourceTree = "<group>"; };
 		1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1305A1EC2E78B6ED0029E6A9 /* CloudSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSessionStore.swift; sourceTree = "<group>"; };
 		1305A1EE2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedHistoryScreen.swift; sourceTree = "<group>"; };
+		1305A1F52E7DF8DD0029E6A9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1305A1F82E7DF9100029E6A9 /* Exceptions for "PushupProApp" folder in "PushupProApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 1305A15E2E5297020029E6A9 /* PushupProApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1305A1612E5297020029E6A9 /* PushupProApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1305A1F82E7DF9100029E6A9 /* Exceptions for "PushupProApp" folder in "PushupProApp" target */,
+			);
 			path = PushupProApp;
 			sourceTree = "<group>";
 		};
@@ -83,8 +98,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1305A1FA2E7DFD6D0029E6A9 /* GoogleSignIn in Frameworks */,
 				1305A1A92E52A1190029E6A9 /* AppUI in Frameworks */,
 				1305A18B2E5298DC0029E6A9 /* FirebaseAuth in Frameworks */,
+				1305A1FC2E7DFD6D0029E6A9 /* GoogleSignInSwift in Frameworks */,
 				1305A1B02E52AAB70029E6A9 /* Sensing in Frameworks */,
 				1305A18D2E5298DC0029E6A9 /* FirebaseFirestore in Frameworks */,
 			);
@@ -115,7 +132,7 @@
 				1305A16F2E5297040029E6A9 /* PushupProAppTests */,
 				1305A1792E5297040029E6A9 /* PushupProAppUITests */,
 				1305A1602E5297020029E6A9 /* Products */,
-				1305A1EA2E7632060029E6A9 /* GoogleService-Info.plist */,
+				1305A1F52E7DF8DD0029E6A9 /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -172,6 +189,8 @@
 				1305A18C2E5298DC0029E6A9 /* FirebaseFirestore */,
 				1305A1A82E52A1190029E6A9 /* AppUI */,
 				1305A1AF2E52AAB70029E6A9 /* Sensing */,
+				1305A1F92E7DFD6D0029E6A9 /* GoogleSignIn */,
+				1305A1FB2E7DFD6D0029E6A9 /* GoogleSignInSwift */,
 			);
 			productName = PushupProApp;
 			productReference = 1305A15F2E5297020029E6A9 /* PushupProApp.app */;
@@ -259,6 +278,7 @@
 				1305A1892E5298DC0029E6A9 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				1305A1A72E52A1180029E6A9 /* XCLocalSwiftPackageReference "../Packages/AppUI" */,
 				1305A1AE2E52AAB70029E6A9 /* XCLocalSwiftPackageReference "../Packages/Sensing" */,
+				1305A1F42E7DF6F60029E6A9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1305A1602E5297020029E6A9 /* Products */;
@@ -277,7 +297,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1305A1EB2E7632060029E6A9 /* GoogleService-Info.plist in Resources */,
+				1305A1F62E7DF8DD0029E6A9 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -492,11 +512,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PushupProApp/PushupProApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3Z83SUM8JF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PushupProApp/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We use the TrueDepth camera to measure push-up distance. No face data is stored.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -521,11 +543,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PushupProApp/PushupProApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3Z83SUM8JF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PushupProApp/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We use the TrueDepth camera to measure push-up distance. No face data is stored.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -678,6 +702,14 @@
 				minimumVersion = 12.1.0;
 			};
 		};
+		1305A1F42E7DF6F60029E6A9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -698,6 +730,16 @@
 		1305A1AF2E52AAB70029E6A9 /* Sensing */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Sensing;
+		};
+		1305A1F92E7DFD6D0029E6A9 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1305A1F42E7DF6F60029E6A9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		1305A1FB2E7DFD6D0029E6A9 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1305A1F42E7DF6F60029E6A9 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
