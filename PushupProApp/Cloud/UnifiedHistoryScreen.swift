@@ -2,50 +2,98 @@
 //  UnifiedHistoryScreen.swift
 //  PushupProApp
 //
-//  Created by Yerzhan Utkelbayev on 15/09/2025.
-//
-
 
 import SwiftUI
 import FirebaseAuth
 import Sessions
 import AppUI
 
+/// Single merged history list (Account + On device).
+/// Both sources are ON by default; a toolbar Filter lets you toggle them.
+/// Resolves the current UID at fetch-time so it updates right after sign-in.
 struct UnifiedHistoryScreen: View {
-  var body: some View {
-    HistoryView(client: makeClient())
+  @State private var showAccount: Bool = true
+  @State private var showDevice:  Bool = true
+
+  // Rebuild the inner HistoryView whenever auth user or filters change
+  private var userKey: String {
+    let u = Auth.auth().currentUser
+    return (u?.isAnonymous ?? true) ? "unsigned" : (u?.uid ?? "unsigned")
   }
 
+  var body: some View {
+    HistoryView(client: makeClient())
+      .id("\(userKey)-A\(showAccount ? 1 : 0)-D\(showDevice ? 1 : 0)")
+      .toolbar {
+        Menu {
+          Toggle("Account", isOn: $showAccount)
+          Toggle("On device", isOn: $showDevice)
+        } label: {
+          Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+        }
+      }
+  }
+
+  // MARK: - HistoryClient (merged, resolves UID at fetch-time)
+
   private func makeClient() -> HistoryClient {
-    let local = SessionStore()
-    let cloud = CloudSessionStore()
-    let uid = Auth.auth().currentUser?.uid
+    // Capture filter toggles for @Sendable closures; view refresh is driven by .id above
+    let includeAccount = showAccount
+    let includeDevice  = showDevice
 
-    // Merge metas (cloud + local) newest-first, dedupe by id (prefer cloud copy when both exist).
+    @Sendable
     func mergedMetas() async throws -> [SessionMeta] {
-      let localMetas = (try? local.loadAllMetas(limit: 200)) ?? []
-      guard let uid else { return localMetas } // no user → local only
+      var out: [SessionMeta] = []
 
-      let cloudMetas = try await cloud.fetchMetas(uid: uid, limit: 200)
+      // Local metas
+      if includeDevice {
+        let local = SessionStore()
+        let lm = try local.loadAllMetas(limit: 500)
+        out.append(contentsOf: lm)
+      }
 
-      // Dedupe by id, preferring cloud
-      var map = [UUID: SessionMeta]()
-      for m in localMetas { map[m.id] = m }
-      for m in cloudMetas { map[m.id] = m } // overwrite with cloud if present
+      // Cloud metas (resolve current uid at call time)
+      if includeAccount {
+        if let u = Auth.auth().currentUser, !u.isAnonymous {
+          let cloud = CloudSessionStore()
+          let cm = try await cloud.fetchMetas(uid: u.uid, limit: 500)
+          out.append(contentsOf: cm)
+        }
+      }
 
-      // Sort newest first
-      return map.values.sorted(by: { $0.startedAt > $1.startedAt })
+      // Dedupe by id; prefer newer
+      var seen: [UUID: SessionMeta] = [:]
+      for m in out {
+        if let prev = seen[m.id] {
+          seen[m.id] = (m.endedAt, m.startedAt) > (prev.endedAt, prev.startedAt) ? m : prev
+        } else {
+          seen[m.id] = m
+        }
+      }
+
+      return seen.values.sorted { $0.startedAt > $1.startedAt }
     }
 
-    // Load session local-first, fallback to cloud, optionally cache to local.
+    @Sendable
     func loadSession(_ id: UUID) async throws -> Session {
-      if let s = try? local.load(id: id) { return s }
-      guard let uid else { throw NSError(domain: "UnifiedHistory", code: 401,
-                                         userInfo: [NSLocalizedDescriptionKey: "Not signed in"]) }
-      let s = try await cloud.fetchSession(uid: uid, id: id)
-      // Optionally cache cloud session into local store so it’s available offline:
-      try? local.save(s)
-      return s
+      // Local first
+      do {
+        let local = SessionStore()
+        if let s = try? local.load(id: id) { return s }
+      }
+
+      // Cloud if available and included
+      if includeAccount, let u = Auth.auth().currentUser, !u.isAnonymous {
+        let cloud = CloudSessionStore()
+        let s = try await cloud.fetchSession(uid: u.uid, id: id)
+        // Cache for offline
+        let local = SessionStore()
+        try? local.save(s)
+        return s
+      }
+
+      throw NSError(domain: "UnifiedHistory", code: 404,
+                    userInfo: [NSLocalizedDescriptionKey: "Session not found in selected sources"])
     }
 
     return HistoryClient(

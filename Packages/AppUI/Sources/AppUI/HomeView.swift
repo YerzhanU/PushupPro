@@ -5,9 +5,6 @@
 //  Created by Yerzhan Utkelbayev on 18/08/2025.
 //
 
-
-// Packages/AppUI/Sources/AppUI/HomeView.swift
-
 import SwiftUI
 import Sessions
 
@@ -16,7 +13,7 @@ public struct HomeView: View {
   private let makeLive: () -> LiveSessionView
   private let makeHistory: () -> AnyView
 
-  // NEW: account button hook + state for icon fill
+  // account button hook + state for icon fill
   private let onTapAccount: (() -> Void)?
   private let isSignedIn: Bool
 
@@ -45,8 +42,9 @@ public struct HomeView: View {
           .buttonStyle(.borderedProminent)
           .frame(maxWidth: .infinity)
 
+        // 🔧 FIX: use the injected history factory instead of hard-coding HistoryView()
         NavigationLink {
-          HistoryView()
+          makeHistory()
         } label: {
           Label("History", systemImage: "clock.arrow.circlepath")
             .frame(maxWidth: .infinity)
@@ -61,7 +59,7 @@ public struct HomeView: View {
       .navigationDestination(isPresented: $showLive) {
         makeLive()
       }
-      // NEW: render the toolbar INSIDE this NavigationStack
+      // Render the toolbar INSIDE this NavigationStack
       .toolbar {
         if let onTapAccount {
           ToolbarItem(placement: .topBarTrailing) {
