@@ -1,14 +1,11 @@
-//
-//  CloudSessionSync.swift
-//  PushupProApp
-//
-
+// CloudSessionSync.swift
 import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 import Sessions
 
 /// Uploads finished sessions to Firestore under users/{uid}/sessions/{sessionId}.
+/// While signed out, uploads are queued; on sign-in, queued + backfill can run.
 final class CloudSessionSync {
   static let shared = CloudSessionSync()
   private init() {}
@@ -19,7 +16,7 @@ final class CloudSessionSync {
   private let pending = PendingUploadStore()
   private let store = SessionStore()
 
-  // Treat only non-anonymous as a real signed-in user.
+  // Only treat non-anonymous as a real, signed-in user.
   private var realUID: String? {
     guard let u = Auth.auth().currentUser, !u.isAnonymous else { return nil }
     return u.uid
@@ -29,7 +26,7 @@ final class CloudSessionSync {
   func upload(_ session: Sessions.Session) {
     guard let uid = realUID else {
       pending.enqueue(id: session.id)
-      print("[CloudSync] Upload queued (guest/no real user): \(session.id)")
+      print("Upload queued (guest/no real user): \(session.id)")
       return
     }
     let ref = db.collection("users").document(uid)
@@ -38,17 +35,12 @@ final class CloudSessionSync {
     let payload = makePayload(from: session)
     ref.setData(payload, merge: true) { [weak self] error in
       if let error {
-        print("[CloudSync] Upload failed, queued: \(error.localizedDescription)")
+        print("Upload failed, queued: \(error.localizedDescription)")
         self?.pending.enqueue(id: session.id)
       } else {
         self?.pending.remove(id: session.id)
-        // 🔻 Prune the local copy so signed-in sessions live only in the account.
-        do {
-          try LocalSessionFilesystem.delete(id: session.id)
-          print("[CloudSync] Upload ok → pruned local: \(session.id)")
-        } catch {
-          print("[CloudSync] Upload ok but prune failed: \(error.localizedDescription)")
-        }
+        let uploaded = (payload["samples"] as? [[String:Any]])?.count ?? 0
+        print("Upload ok: \(session.id) (\(session.samples.count) local / \(uploaded) uploaded)")
       }
     }
   }
@@ -61,28 +53,15 @@ final class CloudSessionSync {
         let ref = db.collection("users").document(uid)
           .collection("sessions").document(id.uuidString)
         ref.setData(makePayload(from: s), merge: true) { [weak self] error in
-          if let error {
-            print("[CloudSync] Retry failed for \(id): \(error.localizedDescription)")
-          } else {
-            self?.pending.remove(id: id)
-            // 🔻 Prune after a successful retry as well.
-            do {
-              try LocalSessionFilesystem.delete(id: id)
-              print("[CloudSync] Retry ok → pruned local: \(id)")
-            } catch {
-              print("[CloudSync] Retry ok but prune failed: \(error.localizedDescription)")
-            }
-          }
+          if error == nil { self?.pending.remove(id: id) }
         }
       } else {
-        // Nothing to upload anymore; drop the queue entry.
-        pending.remove(id: id)
+        pending.remove(id: id) // local file gone; drop from queue
       }
     }
   }
 
-  /// Backfill ALL local sessions to the current real user (idempotent).
-  /// Note: we do NOT prune here; your explicit "Import & remove" flow handles deletion.
+  /// Backfill ALL local sessions to the current real user.
   func backfillAll(limit: Int = 500) {
     guard let uid = realUID else { return }
     do {
@@ -93,7 +72,7 @@ final class CloudSessionSync {
           .collection("sessions").document(s.id.uuidString)
         ref.setData(makePayload(from: s), merge: true) { [weak self] error in
           if let error {
-            print("[CloudSync] Backfill failed for \(s.id): \(error.localizedDescription)")
+            print("Backfill failed for \(s.id): \(error.localizedDescription)")
             self?.pending.enqueue(id: s.id)
           } else {
             self?.pending.remove(id: s.id)
@@ -101,7 +80,7 @@ final class CloudSessionSync {
         }
       }
     } catch {
-      print("[CloudSync] Backfill scan failed: \(error.localizedDescription)")
+      print("Backfill scan failed:", error.localizedDescription)
     }
   }
 

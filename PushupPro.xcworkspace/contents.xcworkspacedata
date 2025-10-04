@@ -34,6 +34,9 @@
    <FileRef
       location = "group:.swiftlint.yml">
    </FileRef>
+   <FileRef
+      location = "container:functions">
+   </FileRef>
    <FileSystemSynchronizedGroup
       location = "group:.github"
       name = ".github">

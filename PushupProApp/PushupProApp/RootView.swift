@@ -5,9 +5,12 @@
 //  Created by Yerzhan Utkelbayev on 18/08/2025.
 //
 
+
 //
 //  RootView.swift
 //  PushupProApp
+//
+//  Created by Yerzhan Utkelbayev on 18/08/2025.
 //
 
 import SwiftUI
@@ -18,19 +21,43 @@ struct RootView: View {
   @EnvironmentObject private var auth: AuthService
   @State private var showAccount = false
 
+  // Local flags so we don't collide with any existing FeatureFlags type.
+  private enum Flags {
+    static let showSettingsTab = false
+    static let showDevTab      = false
+  }
+
+  private var isSignedIn: Bool {
+    let u = Auth.auth().currentUser
+    return u != nil && !(u?.isAnonymous ?? true)
+  }
+
   var body: some View {
     TabView {
       makeHomeTab()
         .tabItem { Label("Home", systemImage: "house.fill") }
 
-      SettingsView()
-        .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+      // Leaderboard: gated to signed-in users; otherwise show a sign-in prompt tab
+      if isSignedIn {
+        LeaderboardScreen()
+          .tabItem { Label("Leaderboard", systemImage: "trophy.fill") }
+      } else {
+        Button { showAccount = true } label: {
+          Text("Sign in to view Leaderboard")
+        }
+        .tabItem { Label("Leaderboard", systemImage: "trophy") }
+      }
 
-      DeveloperView()
-        .tabItem { Label("Dev", systemImage: "wrench.and.screwdriver.fill") }
+      // Hidden tabs (flip flags to true to bring back)
+      if Flags.showSettingsTab {
+        SettingsView()
+          .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+      }
+      if Flags.showDevTab {
+        DeveloperView()
+          .tabItem { Label("Dev", systemImage: "wrench.and.screwdriver.fill") }
+      }
     }
-    // Force a rebuild when the signed-in user changes
-    .id(Auth.auth().currentUser?.uid ?? "unsigned")
     .sheet(isPresented: $showAccount) {
       AccountSheet().environmentObject(auth)
     }
@@ -40,16 +67,17 @@ struct RootView: View {
   private func makeHomeTab() -> some View {
     HomeView(
       makeLive: {
-        LiveSessionView { session in
-          // Queues while unsigned; uploads when signed in
-          CloudSessionSync.shared.upload(session)
-        }
+        // Save locally only for Guests; when signed in, upload only.
+        LiveSessionView(
+          onSessionSaved: { session in
+            CloudSessionSync.shared.upload(session) // queues if Guest
+          },
+          saveLocally: (Auth.auth().currentUser?.isAnonymous ?? true)
+        )
       },
-      makeHistory: {
-        AnyView(UnifiedHistoryScreen())   // ← unified merged history
-      },
+      makeHistory: { AnyView(UnifiedHistoryScreen()) },
       onTapAccount: { showAccount = true },
-      isSignedIn: !(Auth.auth().currentUser?.isAnonymous ?? true)
+      isSignedIn: isSignedIn
     )
     .environmentObject(auth)
   }
