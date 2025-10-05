@@ -13,11 +13,11 @@ public struct HomeView: View {
   private let makeLive: () -> LiveSessionView
   private let makeHistory: () -> AnyView
 
-  // account button hook + state for icon fill
+  // Account button hook + state for icon fill
   private let onTapAccount: (() -> Void)?
   private let isSignedIn: Bool
 
-  // Default initializer keeps existing callers working
+  // Defaults keep existing callers working
   public init(
     makeLive: @escaping () -> LiveSessionView = { LiveSessionView() },
     makeHistory: @escaping () -> AnyView = { AnyView(HistoryView()) },
@@ -30,7 +30,11 @@ public struct HomeView: View {
     self.isSignedIn = isSignedIn
   }
 
+  // MARK: - State
   @State private var showLive = false
+  @AppStorage("pp_hasSeenOnboarding") private var hasSeenOnboarding = false
+  @State private var showOnboarding = false
+  @State private var showFAQ = false
 
   public var body: some View {
     NavigationStack {
@@ -42,11 +46,20 @@ public struct HomeView: View {
           .buttonStyle(.borderedProminent)
           .frame(maxWidth: .infinity)
 
-        // 🔧 FIX: use the injected history factory instead of hard-coding HistoryView()
+        // History (use injected factory)
         NavigationLink {
           makeHistory()
         } label: {
           Label("History", systemImage: "clock.arrow.circlepath")
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+
+        // NEW: Instructions & FAQ
+        Button {
+          showFAQ = true
+        } label: {
+          Label("Instructions & FAQ", systemImage: "questionmark.circle")
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
@@ -59,7 +72,7 @@ public struct HomeView: View {
       .navigationDestination(isPresented: $showLive) {
         makeLive()
       }
-      // Render the toolbar INSIDE this NavigationStack
+      // Toolbar INSIDE this NavigationStack
       .toolbar {
         if let onTapAccount {
           ToolbarItem(placement: .topBarTrailing) {
@@ -70,17 +83,28 @@ public struct HomeView: View {
           }
         }
       }
+      // Auto-show Quick Start on first launch
+      .task {
+        if !hasSeenOnboarding {
+          // small delay for smoother presentation after first frame
+          try? await Task.sleep(nanoseconds: 200_000_000)
+          showOnboarding = true
+        }
+      }
+      // Sheets
+      .sheet(isPresented: $showOnboarding) { OnboardingView() }
+      .sheet(isPresented: $showFAQ) { FAQView() }
     }
   }
 }
 
-/// Tip banner (unchanged)
+/// Tip banner
 public struct ProTip: View {
   public init() {}
   public var body: some View {
     HStack(alignment: .top, spacing: 12) {
       Image(systemName: "lightbulb")
-      Text("You can fine-tune push-up detection (height, re-arm, smoothing) inside a session via the gear icon.")
+      Text("You can fine-tune detection in-session via **Advanced settings** under the distance bar.")
       Spacer(minLength: 0)
     }
     .padding(12)
