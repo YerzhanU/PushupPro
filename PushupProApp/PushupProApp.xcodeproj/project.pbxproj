@@ -29,6 +29,7 @@
 		1305A21B2E90AB150029E6A9 /* PeriodKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A21A2E90AB150029E6A9 /* PeriodKey.swift */; };
 		1305A21D2E90ACED0029E6A9 /* DevBootstrapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1305A21C2E90ACED0029E6A9 /* DevBootstrapService.swift */; };
 		1305A2222E90CD140029E6A9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1305A2212E90CD140029E6A9 /* Assets.xcassets */; };
+		13F1AAE52EA38C3F00EEA41F /* AccountDeletionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F1AAE42EA38C3F00EEA41F /* AccountDeletionService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +69,7 @@
 		1305A21A2E90AB150029E6A9 /* PeriodKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodKey.swift; sourceTree = "<group>"; };
 		1305A21C2E90ACED0029E6A9 /* DevBootstrapService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevBootstrapService.swift; sourceTree = "<group>"; };
 		1305A2212E90CD140029E6A9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		13F1AAE42EA38C3F00EEA41F /* AccountDeletionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -184,6 +186,7 @@
 				1305A1B82E7600350029E6A9 /* FirebaseBootstrap.swift */,
 				1305A1EC2E78B6ED0029E6A9 /* CloudSessionStore.swift */,
 				1305A21C2E90ACED0029E6A9 /* DevBootstrapService.swift */,
+				13F1AAE42EA38C3F00EEA41F /* AccountDeletionService.swift */,
 				1305A1BA2E76004B0029E6A9 /* CloudSessionSync.swift */,
 				1305A1C42E7608FB0029E6A9 /* AppDelegate.swift */,
 				1305A1B92E7600450029E6A9 /* AuthService.swift */,
@@ -390,6 +393,7 @@
 				1305A2012E7F75030029E6A9 /* MigrationCoordinator.swift in Sources */,
 				1305A1EF2E78B6F90029E6A9 /* UnifiedHistoryScreen.swift in Sources */,
 				1305A1C32E7603A60029E6A9 /* AccountSheet.swift in Sources */,
+				13F1AAE52EA38C3F00EEA41F /* AccountDeletionService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

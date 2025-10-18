@@ -18,7 +18,7 @@ public struct LiveSessionView: View {
   private let saveLocally: Bool
 
   // MARK: Persisted defaults
-  @AppStorage("pp_heightCM")        private var storedHeight: Double = 3.0
+  @AppStorage("pp_heightCM")        private var storedHeight: Double = 2.0
   @AppStorage("pp_rearmEpsCM")      private var storedRearmEps: Double = 0.5
   @AppStorage("pp_smoothingAlpha")  private var storedAlpha: Double = 0.25
   @AppStorage("pp_minRepDuration")  private var storedMinRep: Double = 0.7
@@ -32,13 +32,13 @@ public struct LiveSessionView: View {
   @State private var providerLabel = "—"
 
   // Tunables bound to the sheet
-  @State private var manualCM: Double = 3.0
+  @State private var manualCM: Double = 2.0
   @State private var rearmEpsCM: Double = 0.5
   @State private var smoothingAlpha: Double = 0.25
   @State private var minRepDuration: Double = 0.7
   @State private var topDecayPerSec: Double = 0.6
 
-  @State private var currentConfig = RepConfig(heightDeltaCM: 3.0)
+  @State private var currentConfig = RepConfig(heightDeltaCM: 2.0)
 
   // Session
   @State private var sessionID = UUID()
