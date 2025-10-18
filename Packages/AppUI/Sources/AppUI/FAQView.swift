@@ -5,14 +5,33 @@
 //  Created by Yerzhan Utkelbayev on 05/10/2025.
 //
 
-
 import SwiftUI
 
 public struct FAQView: View {
+  @Environment(\.dismiss) private var dismiss
+  @State private var showQuickStart = false
+
   public init() {}
+
   public var body: some View {
     NavigationStack {
       List {
+        // Quick-Start entry
+        Section {
+          Button {
+            showQuickStart = true
+          } label: {
+            HStack(spacing: 12) {
+              Image(systemName: "sparkles.rectangle.stack")
+              Text("View Quick Start")
+              Spacer()
+              Image(systemName: "chevron.right")
+                .foregroundStyle(.secondary)
+            }
+          }
+          .buttonStyle(.plain)
+        }
+
         Section("Quick Basics") {
           Disclosure("How should I place the phone?") {
             Text("""
@@ -61,12 +80,30 @@ public struct FAQView: View {
         }
       }
       .navigationTitle("Instructions & FAQ")
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button("Done") { dismiss() }
+        }
+      }
+      .sheet(isPresented: $showQuickStart) {
+        OnboardingView()
+      }
     }
   }
 }
 
 private struct Disclosure: View {
-  let title: String; let content: () -> Text
-  init(_ title: String, @ViewBuilder content: @escaping () -> Text) { self.title = title; self.content = content }
-  var body: some View { DisclosureGroup(title) { content().padding(.vertical, 6) } }
+  let title: String
+  let content: () -> Text
+
+  init(_ title: String, @ViewBuilder content: @escaping () -> Text) {
+    self.title = title
+    self.content = content
+  }
+
+  var body: some View {
+    DisclosureGroup(title) {
+      content().padding(.vertical, 6)
+    }
+  }
 }
