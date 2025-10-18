@@ -35,19 +35,20 @@ public struct FAQView: View {
         Section("Quick Basics") {
           Disclosure("How should I place the phone?") {
             Text("""
-            Lay it screen-up on the floor with the front camera facing you. Place it about 30–60 cm
-            from your forehead and keep it steady. Hard, flat surfaces work best.
+            Lay the phone **screen-up** on the floor with the front TrueDepth camera facing up.
+            Place it at **head level** — roughly in line with your **forehead** — about **30–60 cm** away.
+            Keep the long edge roughly parallel to your shoulders. Use a hard, flat surface and keep the phone steady.
             """)
           }
           Disclosure("How are reps detected?") {
             Text("""
-            We track distance to your face through the TrueDepth camera. A rep counts when you go
-            below your target height and then return to the top with sufficient tempo.
+            We track distance to your face via the TrueDepth camera. A rep counts when you go
+            **below your target height** and then return to the top with sufficient tempo.
             """)
           }
           Disclosure("Where are my sessions saved?") {
             Text("""
-            Always on device. If you sign in, sessions sync to your account and appear on leaderboards.
+            Sessions always save on your device. If you sign in, they also sync to your account and appear on leaderboards.
             You can import existing local sessions to your account from Account.
             """)
           }
@@ -65,7 +66,7 @@ public struct FAQView: View {
           }
           Disclosure("Periods (Today / Month / Year / All-time)") {
             Text("""
-            Periods roll over in UTC. We compare by score, then by the earliest time you reached it.
+            Periods roll over in **UTC**. We compare by score, then by the **earliest time** you reached it.
             """)
           }
         }
